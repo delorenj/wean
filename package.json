@@ -14,6 +14,7 @@
     "@react-navigation/material-top-tabs": "^6.5.1",
     "@react-navigation/native": "^6.1.1",
     "@react-navigation/native-stack": "^6.9.7",
+    "@realm/react": "^0.4.1",
     "@types/react": "~18.0.24",
     "@types/react-native": "~0.70.6",
     "expo": "~47.0.8",
@@ -26,6 +27,7 @@
     "react-native-screens": "~3.18.0",
     "react-native-vector-icons": "^9.2.0",
     "react-native-web": "~0.18.9",
+    "realm": "^11.3.1",
     "typescript": "^4.6.3"
   },
   "devDependencies": {
