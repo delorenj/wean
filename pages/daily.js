@@ -1,26 +1,15 @@
 import {StyleSheet, Text, View} from "react-native";
 import {useTheme} from "react-native-paper";
+import {useMainStyles} from "../hooks/useMainStyles";
 
 export const DailyPage = () => {
   const theme = useTheme()
-  console.log(JSON.stringify(theme))
+  const styles = useMainStyles(theme)
   return (
-    <View style={styles(theme).container}>
-      <Text style={styles(theme).text}>Daily</Text>
+    <View style={styles.container}>
+      <Text style={styles.text}>Daily</Text>
     </View>
   );
 }
-
-const styles = theme => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  text: {
-    color: theme.colors.text
-  }
-});
 
 export default DailyPage;
