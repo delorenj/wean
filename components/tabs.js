@@ -12,12 +12,7 @@ export const Tabs = () => {
     <Tab.Navigator
       initialRouteName="Daily"
       tabBarPosition="bottom"
-      screenListeners={{
-      navigation: (e) => {
-        // Do something with the state
-        console.log('state changed', e.data);
-      },
-    }}>
+    >
       <Tab.Screen name="Daily" component={DailyPage} options={{
         tabBarLabel: 'Home',
         tabBarLabelStyle: {fontSize: 8},
