@@ -3,6 +3,7 @@ import {useTheme} from "react-native-paper";
 
 export const DailyPage = () => {
   const theme = useTheme()
+  console.log(JSON.stringify(theme))
   return (
     <View style={styles(theme).container}>
       <Text style={styles(theme).text}>Daily</Text>
@@ -13,12 +14,12 @@ export const DailyPage = () => {
 const styles = theme => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: theme.colors.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
   text: {
-    color: theme.colors.white
+    color: theme.colors.text
   }
 });
 

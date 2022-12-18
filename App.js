@@ -1,16 +1,16 @@
-import {NavigationContainer} from "@react-navigation/native";
-import { Provider as PaperProvider, ThemeProvider } from 'react-native-paper';
+import {NavigationContainer, DefaultTheme as DefaultNavTheme} from "@react-navigation/native";
+import {Provider as PaperProvider, adaptNavigationTheme} from 'react-native-paper';
+const { LightTheme } = adaptNavigationTheme({ reactNavigationLight: DefaultNavTheme });
 import {Tabs} from "./components/tabs";
-import {mainTheme} from "./constants/colors";
+import {customTheme} from "./constants/colors";
+
 export const App = () => {
   return (
-    <ThemeProvider theme={mainTheme}>
-      <PaperProvider>
-        <NavigationContainer>
+      <PaperProvider theme={customTheme}>
+        <NavigationContainer theme={LightTheme}>
           <Tabs />
         </NavigationContainer>
       </PaperProvider>
-    </ThemeProvider>
   );
 }
 
