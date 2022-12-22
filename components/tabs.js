@@ -14,7 +14,7 @@ export const Tabs = () => {
       tabBarPosition="bottom"
     >
       <Tab.Screen name="Daily" component={DailyPage} options={{
-        tabBarLabel: 'Home',
+        tabBarLabel: 'Daily',
         tabBarLabelStyle: {fontSize: 8},
         tabBarIcon: ({ color }) => (
           <MaterialCommunityIcons name="home" color={color} size={26} />

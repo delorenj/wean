@@ -1,12 +1,6 @@
 import { initializeApp } from 'firebase/app';
-
-// Optionally import the services that you want to use
-// import {...} from "firebase/auth";
-// import {...} from "firebase/database";
-// import {...} from "firebase/firestore";
-// import {...} from "firebase/functions";
-// import {...} from "firebase/storage";
-
+import { getFirestore } from "firebase/firestore";
+import {createContext, useContext} from "react";
 // Initialize Firebase
 const firebaseConfig = {
   apiKey: 'AIzaSyDXh34Ns3tNXWH3tAzlLQnc9Wh3wrrFPRE',
@@ -19,6 +13,16 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-// For more information on how to access Firebase in your project,
-// see the Firebase documentation: https://firebase.google.com/docs/web/setup#access-firebase
+const FirebaseContext = createContext(null)
+export const useFirebase = () => useContext(FirebaseContext)
+
+export const FirebaseProvider = ({ children, firebaseConfig }) => {
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  return (
+    <FirebaseContext.Provider value={ {app, db} }>
+      {children}
+    </FirebaseContext.Provider>
+  );
+};

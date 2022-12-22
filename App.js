@@ -4,14 +4,17 @@ const { LightTheme, DarkTheme } = adaptNavigationTheme({ reactNavigationLight: D
 
 import {Tabs} from "./components/tabs";
 import {customTheme, customDarkTheme} from "./constants/colors";
+import {FirebaseProvider} from "./firebaseConfig";
 
 export const App = () => {
   return (
+    <FirebaseProvider>
       <PaperProvider theme={customDarkTheme}>
         <NavigationContainer theme={DarkTheme}>
           <Tabs />
         </NavigationContainer>
       </PaperProvider>
+    </FirebaseProvider>
   );
 }
 
