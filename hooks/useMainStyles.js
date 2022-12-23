@@ -7,12 +7,8 @@ export const useMainStyles = theme => {
       container: {
         flex: 1,
         backgroundColor: theme.colors.background,
-        alignItems: 'center',
-        justifyContent: 'center',
+
       },
-      text: {
-        color: theme.colors.onBackground
-      }
     });
   }, [theme])
 }

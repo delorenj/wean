@@ -1,17 +1,15 @@
-import {Colors} from "react-native/Libraries/NewAppScreen";
 import {MD3LightTheme, MD3DarkTheme} from "react-native-paper";
+import configureFonts from "react-native-paper/src/styles/fonts";
+import {Platform} from "react-native";
 export const mediumSeaGreen = '#58BC82';
 export const lightGreen = '#8FE388';
 export const darkJungleGreen = '#1C2321';
 export const rufousRed = '#A50104';
 export const selectiveYellow = '#FCBA04';
 
+
 export const customTheme = {
   ...MD3LightTheme,
-  fonts: {
-    regular: 'Helvetica Neue',
-    medium: 'Helvetica Neue Light',
-  },
   "colors": {
     "primary": "rgb(1, 110, 33)",
     "onPrimary": "rgb(255, 255, 255)",
@@ -58,10 +56,6 @@ export const customTheme = {
 
 export const customDarkTheme = {
   ...MD3DarkTheme,
-  fonts: {
-    regular: 'Helvetica Neue',
-    medium: 'Helvetica Neue Light',
-  },
   "colors": {
     "primary": "rgb(126, 219, 127)",
     "onPrimary": "rgb(0, 57, 13)",
