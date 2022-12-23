@@ -13,12 +13,12 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const FirebaseContext = createContext(null)
+export const FirebaseContext = createContext(null)
 export const useFirebase = () => useContext(FirebaseContext)
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-export const FirebaseProvider = ({ children, firebaseConfig }) => {
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+export const FirebaseProvider = ({ children }) => {
 
   return (
     <FirebaseContext.Provider value={ {app, db} }>

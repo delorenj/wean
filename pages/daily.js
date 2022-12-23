@@ -28,7 +28,7 @@ export const DailyPage = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Daily</Text>
+      <Text style={styles.text}>FUFUFUFUFUFUFUCKLCKCK</Text>
     </View>
   );
 }
