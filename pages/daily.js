@@ -4,13 +4,16 @@ import {useMainStyles} from "../hooks/useMainStyles";
 import {useFirebase} from "../firebaseConfig";
 import {useEffect} from "react";
 import { collection, addDoc } from "firebase/firestore";
+import useFireauth from "../hooks/useFireauth";
 
 export const DailyPage = () => {
   const theme = useTheme()
   const styles = useMainStyles(theme)
   const {db} = useFirebase();
+  const {user} = useFireauth();
 
   useEffect(() => {
+    if(!user) return;
     const addData = async () => {
       try {
         const docRef = await addDoc(collection(db, "users"), {
@@ -24,11 +27,14 @@ export const DailyPage = () => {
       }
     };
     addData();
-  }, [db, addDoc]);
+  }, [db, user, addDoc]);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>FUFUFUFUFUFUFUCKLCKCK</Text>
+      {user &&
+        <Text style={styles.text}>{user.uid}</Text>
+      }
+      <Text style={styles.text}>Poopp</Text>
     </View>
   );
 }
