@@ -1,8 +1,16 @@
 import { useEffect, useState } from 'react';
 import {getAuth, signInAnonymously, onAuthStateChanged} from 'firebase/auth';
 
-const useFireauth = () => {
-  const [user, setUser] = useState();
+export interface User {
+  uid: String
+}
+
+export interface FireauthType {
+  user: User
+}
+
+const useFireauth = (): FireauthType => {
+  const [user, setUser] = useState<User>();
   const auth = getAuth();
 
   useEffect(() => {

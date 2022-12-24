@@ -1,16 +1,16 @@
-import {SectionList, StatusBar, StyleSheet, View} from "react-native";
-import {Headline, Title, useTheme, Text, Divider, List, MD3Colors, Switch} from "react-native-paper";
-import {useMemo} from "react";
+import {View} from "react-native";
+import {useTheme, Text, Divider, List, Switch} from "react-native-paper";
 import {useMainStyles} from "../hooks/useMainStyles";
 import {SafeAreaView} from "react-native-safe-area-context";
-import ListItem from "react-native-paper/lib/commonjs/components/List/ListItem";
+import useSettings from "../hooks/useSettings";
+import {SettingsProviderType} from "../hooks/useSettings";
 
 export const SettingsPage = () => {
   const theme = useTheme()
   const styles = useMainStyles(theme)
-  const { docs } = useSettings()
+  const { settings }: SettingsProviderType = useSettings()
   return (
-    <SafeAreaView style={styles}>
+    <SafeAreaView style={styles.container}>
       <View>
         <Text variant='headlineLarge' style={{padding: 20}}>Settings</Text>
         <Divider />
@@ -21,13 +21,9 @@ export const SettingsPage = () => {
                     <List.Icon icon="brightness-4" />
                 )}
                 right={() => (
-                            <Switch
-                trackColor={{ true: '#3498db', false: '#95a5a6' }}
-            />
-            )}>
-
-            </List.Item>
-
+                    <Switch trackColor={{ true: '#3498db', false: '#95a5a6' }}
+                />
+            )} />
         </List.Section>
       </View>
     </SafeAreaView>
