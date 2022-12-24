@@ -12,19 +12,22 @@ const {LightTheme, DarkTheme} = adaptNavigationTheme({
 
 import {Tabs} from "./components/tabs";
 import {customTheme, customDarkTheme} from "./constants/colors";
-import {FirebaseProvider} from "./firebaseConfig";
+import {FirebaseProvider} from "./context/firebaseConfig";
 import {SafeAreaProvider, SafeAreaView} from "react-native-safe-area-context";
+import {SettingsProvider} from "./context/settingsProvider";
 
 export const App = () => {
   return (
     <FirebaseProvider>
-      <SafeAreaProvider>
-        <PaperProvider theme={customDarkTheme}>
-          <NavigationContainer theme={DarkTheme}>
-            <Tabs/>
-          </NavigationContainer>
-        </PaperProvider>
-      </SafeAreaProvider>
+      <SettingsProvider>
+        <SafeAreaProvider>
+          <PaperProvider theme={customDarkTheme}>
+            <NavigationContainer theme={DarkTheme}>
+              <Tabs/>
+            </NavigationContainer>
+          </PaperProvider>
+        </SafeAreaProvider>
+      </SettingsProvider>
     </FirebaseProvider>
   );
 }

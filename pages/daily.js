@@ -1,7 +1,7 @@
 import {StyleSheet, View} from "react-native";
 import {useTheme, Text} from "react-native-paper";
 import {useMainStyles} from "../hooks/useMainStyles";
-import {useFirebase} from "../firebaseConfig";
+import {useFirebase} from "../context/firebaseConfig";
 import {useEffect} from "react";
 import { collection, addDoc } from "firebase/firestore";
 import useFireauth from "../hooks/useFireauth";
