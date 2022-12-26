@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {Model, ModelConverter} from '../models/Model';
 import useFireauth, {FireauthType} from "./useFireauth";
 import useFirestore from "./useFirestore";
+import {collection, getDocs, query, where, onSnapshot} from "firebase/firestore";
 
 export interface SettingsProviderType {
     settings: Settings
@@ -37,20 +38,18 @@ const useSettings = (): SettingsProviderType => {
 
     useEffect(() => {
         if (!user || !db || !setSettings) return;
-
-        db.collection('settings')
-            .where('userId', '==', user.uid)
+        const q = query(collection(db, 'settings'), where('userId', '==', user.uid))
+        const docs = getDocs(q)
             .then((snapshot) => {
-                console.log(`Got user settings for user id=${user.uid}`)
+                console.log(`Got user settings for user id=${user.uid}`);
                 snapshot.forEach((doc) => {
                     console.log(doc.id, '=>', doc.data());
-                    setSettings(doc);
-                });
+                })
             })
             .catch((e) => {
-                console.log(`Error looking up user settings: ${e.message}`)
+                console.log("oops")
             })
-    }, [user, db, setSettings]);
+    }, [user, db, setSettings])
 
     return { settings };
 }
