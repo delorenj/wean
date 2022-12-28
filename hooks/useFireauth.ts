@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import {getAuth, signInAnonymously, onAuthStateChanged} from 'firebase/auth';
 
 export interface User {
-  uid: String
+  uid: string
 }
 
 export interface FireauthType {

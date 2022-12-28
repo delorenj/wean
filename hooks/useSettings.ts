@@ -3,6 +3,7 @@ import {Model, ModelConverter} from '../models/Model';
 import useFireauth, {FireauthType} from "./useFireauth";
 import useFirestore from "./useFirestore";
 import {collection, getDocs, query, where, onSnapshot, doc, setDoc, updateDoc} from "firebase/firestore";
+import {useFirebase} from "../context/firebaseConfig";
 
 export interface SettingsProviderType {
     settings: Settings,
@@ -38,28 +39,33 @@ const useSettings = (): SettingsProviderType => {
         id: '',
         darkMode: true
     });
+    const [loaded, setLoaded] = useState<boolean>(false);
+    const [dirty, setDirty] = useState<boolean>(false);
     const {user}: FireauthType = useFireauth();
-    const {db} = useFirestore();
+    const {db} = useFirebase();
 
+    // On page load
+    // init settings object from db
     useEffect(() => {
         if (!user || !db || !setSettings) return;
-        const q = query(collection(db, 'settings'), where('userId', '==', user.uid)).withConverter(settingsConverter)
-        const docs = getDocs(q)
-            .then((snapshot) => {
-                console.log(`Got user settings for user id=${user.uid}`);
-                snapshot.forEach((doc) => {
-                    console.log(doc.id, '=>', doc.data());
-                })
-            })
-            .catch((e) => {
-                console.log("oops")
-            })
+
     }, [user, db, setSettings])
 
+    // On settings object updated
+    // push new object to db
     useEffect(() => {
         if (!user || !db || !settings) return;
-        updateDoc(settings)
-    }, [settings])
+        console.log("PEEEEEN: " + JSON.stringify(db))
+        const ref = doc(db, "settings", user.uid).withConverter(settingsConverter);
+        setDoc(ref, settings)
+            .then(r => {
+                console.log("Yay! Set settings!")
+            })
+            .catch(e => {
+                console.log("balls =( " + e.message)
+            })
+        
+    }, [db, settings])
 
     const toggleDarkMode = () => {
         setSettings({...settings, darkMode:!settings.darkMode})

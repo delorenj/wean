@@ -10,7 +10,7 @@ export const Tabs = () => {
   const Tab = createMaterialTopTabNavigator();
   return (
     <Tab.Navigator
-      initialRouteName="Daily"
+      initialRouteName="Settings"
       tabBarPosition="bottom"
     >
       <Tab.Screen name="Daily" component={DailyPage} options={{
