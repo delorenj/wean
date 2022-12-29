@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import {Model, ModelConverter} from '../models/Model';
 import useFireauth, {FireauthType} from "./useFireauth";
-import useFirestore from "./useFirestore";
-import {collection, getDocs, query, where, onSnapshot, doc, setDoc, updateDoc} from "firebase/firestore";
+import {onSnapshot, doc, setDoc} from "firebase/firestore";
 import {useFirebase} from "../context/firebaseConfig";
 
 export interface SettingsProviderType {
@@ -11,12 +10,10 @@ export interface SettingsProviderType {
 }
 
 interface Settings extends Model {
-    id: String,
     darkMode: boolean
 }
 
-const Settings = (id: String, darkMode: boolean): Settings => ({
-    id,
+const Settings = (darkMode: boolean): Settings => ({
     darkMode,
     toString() {
         return `${darkMode}`;
@@ -24,51 +21,54 @@ const Settings = (id: String, darkMode: boolean): Settings => ({
 });
 
 const settingsConverter: ModelConverter = {
-    toFirestore: (settings: Settings) => ({
-        id: settings.id,
-        darkMode: settings.darkMode,
-    }),
+    toFirestore: (settings: Settings) => {
+        console.log("to converter", settings);
+        return {
+            darkMode: settings.darkMode,
+        }
+    },
     fromFirestore: (snapshot: any, options: any) => {
         const data = snapshot.data(options);
-        return Settings(data.id, data.darkMode);
+        console.log("from converter", data)
+        return Settings(data.darkMode);
     },
 };
 
 const useSettings = (): SettingsProviderType => {
     const [settings, setSettings] = useState<Settings>({
-        id: '',
         darkMode: true
     });
-    const [loaded, setLoaded] = useState<boolean>(false);
-    const [dirty, setDirty] = useState<boolean>(false);
     const {user}: FireauthType = useFireauth();
     const {db} = useFirebase();
 
-    // On page load
-    // init settings object from db
     useEffect(() => {
-        if (!user || !db || !setSettings) return;
-
-    }, [user, db, setSettings])
+        if(!db || !user) return;
+            const unsub = onSnapshot(doc(db, "settings", user.uid).withConverter(settingsConverter), (doc) => {
+                const source = doc.metadata.hasPendingWrites ? "Local" : "Server";
+                console.log(source, " data: ", doc.data());
+                setSettings(doc.data());
+            });
+    }, [user, db]);
 
     // On settings object updated
     // push new object to db
-    useEffect(() => {
-        if (!user || !db || !settings) return;
-        console.log("PEEEEEN: " + JSON.stringify(db))
+    const sendSettingsToFirestore = newSettings =>  {
+        if (!user || !db ) return;
         const ref = doc(db, "settings", user.uid).withConverter(settingsConverter);
-        setDoc(ref, settings)
-            .then(r => {
-                console.log("Yay! Set settings!")
+        setDoc(ref, newSettings)
+            .then(data => {
+                console.log("Yay! Updated settings!")
             })
             .catch(e => {
-                console.log("balls =( " + e.message)
+                console.log(`There was an error pushing settings to firestore with userId=${user.uid}`)
             })
-        
-    }, [db, settings])
+
+    }
 
     const toggleDarkMode = () => {
-        setSettings({...settings, darkMode:!settings.darkMode})
+        const newSettings = {...settings, darkMode:!settings.darkMode};
+        setSettings(newSettings)
+        sendSettingsToFirestore(newSettings);
     }
     return { settings, toggleDarkMode };
 }
