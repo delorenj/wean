@@ -1,5 +1,5 @@
 import {View} from "react-native";
-import {useTheme, Text} from "react-native-paper";
+import {useTheme, Text, MD3Colors} from "react-native-paper";
 import {useMainStyles} from "../hooks/useMainStyles";
 import {useFirebase} from "../context/firebaseConfig";
 import useFireauth from "../hooks/useFireauth";
@@ -31,7 +31,7 @@ export const DailyPage = () => {
 
   return (
     <SafeAreaView>
-      <View style={styles}>
+      <View style={styles.container}>
         {user &&
           <RollingCalendarWeek />
         }
