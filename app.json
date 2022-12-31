@@ -30,6 +30,10 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "jsEngine": "hermes",
+    "extra": {
+      "debuggerWorker.forceLocal": true
     }
   }
 }

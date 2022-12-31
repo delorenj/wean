@@ -39,5 +39,7 @@
     "@babel/core": "^7.12.9",
     "sharp-cli": "^2.1.0"
   },
+  "hermes_exec": "hermes",
+
   "private": true
 }

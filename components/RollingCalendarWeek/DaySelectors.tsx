@@ -9,10 +9,18 @@ export const DaySelectors = () => {
     const styles = {
         button: {
             flex: 0.1,
+            flexDirection: "column",
             backgroundColor: theme.colors.secondaryContainer,
             borderRadius: 10,
             height: 75,
-            padding: 5
+            padding: 5,
+
+        },
+        numCard: {
+            flex: 0,
+            alignSelf: "flex-end",
+            paddingTop: 8,
+            paddingBottom: 8,
         },
         text: {
             textAlign: 'center',
@@ -21,13 +29,6 @@ export const DaySelectors = () => {
             fontSize: 10,
             fontWeight: "bold"
         },
-        numCard: {
-            marginTop: 10,
-            flex: 0.8,
-            flexDirection: "column",
-            alignItems: "stretch",
-            justifyContent: "center"
-        }
     }
     return (
         <View style={{padding:5, flexDirection: 'row', justifyContent: 'space-between'}}>
