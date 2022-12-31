@@ -1,11 +1,10 @@
-import {StyleSheet, View} from "react-native";
+import {View} from "react-native";
 import {useTheme, Text} from "react-native-paper";
 import {useMainStyles} from "../hooks/useMainStyles";
 import {useFirebase} from "../context/firebaseConfig";
-import {useEffect} from "react";
-import { collection, addDoc } from "firebase/firestore";
 import useFireauth from "../hooks/useFireauth";
 import {SafeAreaView} from "react-native-safe-area-context";
+import {RollingCalendarWeek} from "../components/RollingCalendarWeek/RollingCalendarWeek";
 
 export const DailyPage = () => {
   const theme = useTheme()
@@ -34,9 +33,8 @@ export const DailyPage = () => {
     <SafeAreaView>
       <View style={styles}>
         {user &&
-          <Text variant='bodyMedium'>{user.uid}</Text>
+          <RollingCalendarWeek />
         }
-        <Text variant='headlineMedium'>Poopp</Text>
       </View>
     </SafeAreaView>
   );

@@ -1,6 +1,5 @@
 import {MD3LightTheme, MD3DarkTheme} from "react-native-paper";
-import configureFonts from "react-native-paper/src/styles/fonts";
-import {Platform} from "react-native";
+
 export const mediumSeaGreen = '#58BC82';
 export const lightGreen = '#8FE388';
 export const darkJungleGreen = '#1C2321';

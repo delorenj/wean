@@ -4,7 +4,7 @@ import { getAuth } from "firebase/auth";
 
 import {createContext, useContext} from "react";
 // Initialize Firebase
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: 'AIzaSyDXh34Ns3tNXWH3tAzlLQnc9Wh3wrrFPRE',
   authDomain: 'wean-17739.firebaseapp.com',
   projectId: "wean-17739",

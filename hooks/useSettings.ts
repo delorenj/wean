@@ -13,7 +13,7 @@ interface Settings extends Model {
     darkMode: boolean
 }
 
-const Settings = (darkMode: boolean): Settings => ({
+const Settings = (darkMode: boolean = true): Settings => ({
     darkMode,
     toString() {
         return `${darkMode}`;
@@ -46,7 +46,11 @@ const useSettings = (): SettingsProviderType => {
             const unsub = onSnapshot(doc(db, "settings", user.uid).withConverter(settingsConverter), (doc) => {
                 const source = doc.metadata.hasPendingWrites ? "Local" : "Server";
                 console.log(source, " data: ", doc.data());
-                setSettings(doc.data());
+                if(!doc.data()) {
+                    setSettings(Settings())
+                } else {
+                    setSettings(doc.data());
+                }
             });
     }, [user, db]);
 
