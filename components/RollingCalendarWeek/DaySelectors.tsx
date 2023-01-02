@@ -3,65 +3,56 @@ import { useRollingCalendarWeek } from "./Context";
 import {Card, useTheme} from "react-native-paper";
 
 export const DaySelectors = () => {
-    const theme = useTheme();
-    const {selectedDate, setSelectedDate} = useRollingCalendarWeek();
-    const currentDate = new Date();
-    const styles = {
-        button: {
-            flex: 0.1,
-            justifyContent: 'space-between' as 'space-between',
-            backgroundColor: theme.colors.secondaryContainer,
-            borderRadius: 10,
-            height: 75,
-            padding: 5,
+  const theme = useTheme();
+  const {selectedDate, setSelectedDate} = useRollingCalendarWeek();
+  const currentDate = new Date();
+  const styles = {
+      button: {
+          flex: 0.1,
+          justifyContent: 'space-between' as 'space-between',
+          backgroundColor: theme.colors.secondaryContainer,
+          borderRadius: 10,
+          height: 75,
+          padding: 5,
 
-        },
-        numCard: {
-            flex: 0,
-            alignSelf: 'center' as 'center'
-            padding: 10
-        },
-        dayName: {
-            textAlign: 'center' as 'center',
-            alignSelf: 'center' as 'center'
-        },
-        text: {
-            textTransform: 'uppercase' as 'uppercase',
-            color: theme.colors.secondary,
-            fontSize: 10,
-            fontWeight: 'bold' as 'bold'
-        },
-    }
-    return (
-        <View style={{padding:5, flexDirection: 'row', justifyContent: 'space-between'}}>
-            <TouchableOpacity style={styles.button}>
-                <Text style={[styles.dayName, styles.text]}>Mon</Text>
-                <Card style={styles.numCard}><Text style={styles.text}>3</Text></Card>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button}>
-                <Text style={[styles.dayName, styles.text]}>Tue</Text>
-                <Card style={styles.numCard}><Text style={styles.text}>4</Text></Card>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button}>
-                <Text style={[styles.dayName, styles.text]}>Wed</Text>
-                <Card style={styles.numCard}><Text style={styles.text}>5</Text></Card>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button}>
-                <Text style={[styles.dayName, styles.text]}>Thu</Text>
-                <Card style={styles.numCard}><Text style={styles.text}>6</Text></Card>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button}>
-                <Text style={[styles.dayName, styles.text]}>Fri</Text>
-                <Card style={styles.numCard}><Text style={styles.text}>7</Text></Card>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button}>
-                <Text style={[styles.dayName, styles.text]}>Sat</Text>
-                <Card style={styles.numCard}><Text style={styles.text}>8</Text></Card>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button}>
-                <Text style={[styles.dayName, styles.text]}>Sun</Text>
-                <Card style={styles.numCard}><Text style={styles.text}>9</Text></Card>
-            </TouchableOpacity>
-        </View>
-    )
-}
+      },
+      numCard: {
+          flex: 0,
+          alignSelf: 'center' as 'center',
+          borderRadius: 8,
+          padding: 7
+      },
+      dayName: {
+          textAlign: 'center' as 'center',
+          alignSelf: 'center' as 'center'
+      },
+      text: {
+          textTransform: 'uppercase' as 'uppercase',
+          color: theme.colors.secondary,
+          fontSize: 10,
+          fontWeight: 'bold' as 'bold'
+      },
+  }
+  const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const currentDay = new Date().getDay(); // gets the current day as a number (0-6)
+
+  const dayButtons = [];
+  for (let i = -3; i <= 3; i++) {
+    const dayDate = new Date();
+    dayDate.setDate(currentDate.getDate() + i);
+    const dayName = daysOfWeek[dayDate.getDay()];
+    const dayDay = dayDate.getDate();
+    dayButtons.push(
+      <TouchableOpacity style={styles.button}>
+        <Text style={[styles.dayName, styles.text]}>{dayName}</Text>
+        <Card style={styles.numCard}><Text style={styles.text}>{dayDay}</Text></Card>
+      </TouchableOpacity>
+    );
+  }
+
+  return (
+    <View style={{padding:5, flexDirection: 'row', justifyContent: 'space-between'}}>
+      {dayButtons}
+    </View>
+  );
+};
