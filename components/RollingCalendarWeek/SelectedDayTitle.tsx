@@ -1,8 +1,9 @@
 import {Text} from "react-native";
 import {useMemo, useState} from "react";
-import {useRollingCalendarWeek} from "./Context";
+import {useDaily} from "../../context/dailyProvider";
+
 export const SelectedDayTitle = () => {
-    const {selectedDate} = useRollingCalendarWeek();
+    const {selectedDate} = useDaily();
     const currentDate = new Date();
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const [dateToDisplay, setDateToDisplay] = useState<Date>(selectedDate || currentDate);

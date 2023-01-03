@@ -4,7 +4,9 @@ import {useMainStyles} from "../hooks/useMainStyles";
 import {useFirebase} from "../context/firebaseConfig";
 import useFireauth from "../hooks/useFireauth";
 import {SafeAreaView} from "react-native-safe-area-context";
-import {RollingCalendarWeek} from "../components/RollingCalendarWeek/RollingCalendarWeek";
+import {Index as RollingCalendarWeek} from "../components/RollingCalendarWeek";
+import {DailyProvider} from "../context/dailyProvider";
+import {DailyDoseGauge} from "../components/DailyDoseGauge";
 
 export const DailyPage = () => {
   const theme = useTheme()
@@ -12,31 +14,19 @@ export const DailyPage = () => {
   const {db} = useFirebase();
   const {user} = useFireauth();
 
-  // useEffect(() => {
-  //   if(!user) return;
-  //   const addData = async () => {
-  //     try {
-  //       const docRef = await addDoc(collection(db, "users"), {
-  //         first: "Ada",
-  //         last: "Lovelace",
-  //         born: 1815,
-  //       });
-  //       console.log("Document written with ID: ", docRef.id);
-  //     } catch (e) {
-  //       console.error("Error adding document: ", e);
-  //     }
-  //   };
-  //   addData();
-  // }, [db, user, addDoc]);
-
   return (
-    <SafeAreaView>
-      <View style={styles.container}>
-        {user &&
-          <RollingCalendarWeek />
-        }
-      </View>
-    </SafeAreaView>
+    <DailyProvider>
+      <SafeAreaView>
+        <View style={styles.container}>
+          {user &&
+            <RollingCalendarWeek />
+          }
+          {user &&
+            <DailyDoseGauge />
+          }
+        </View>
+      </SafeAreaView>
+    </DailyProvider>
   );
 }
 

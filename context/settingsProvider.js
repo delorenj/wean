@@ -1,8 +1,4 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
-
-import {createContext, useContext} from "react";
+import {createContext} from "react";
 import useFirestore from "../hooks/useFirestore";
 
 export const SettingsContext = createContext(null);

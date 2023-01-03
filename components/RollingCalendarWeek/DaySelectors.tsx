@@ -1,14 +1,13 @@
 import {Text, TouchableOpacity, View} from "react-native";
-import { useRollingCalendarWeek } from "./Context";
 import {Card, useTheme} from "react-native-paper";
 import {useCallback, useMemo} from "react";
+import {useDaily} from "../../context/dailyProvider";
 
 export const DaySelectors = () => {
   const theme = useTheme();
-  const {selectedDate, setSelectedDate} = useRollingCalendarWeek();
+  const {selectedDate, setSelectedDate} = useDaily();
   const currentDate = new Date();
   const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const currentDay = new Date().getDay(); // gets the current day as a number (0-6)
 
   const dayButtons = [];
   for (let i = -3; i <= 3; i++) {
@@ -21,7 +20,7 @@ export const DaySelectors = () => {
     }, [theme, dayDate, selectedDate])
 
     dayButtons.push(
-      <TouchableOpacity style={styles.button}>
+      <TouchableOpacity style={styles.button} onPress={() => setSelectedDate(dayDate)}>
         <Text style={[styles.text,styles.dayName]}>{dayName}</Text>
         <Card style={styles.numCard}><Text style={styles.text}>{dayDay}</Text></Card>
       </TouchableOpacity>
