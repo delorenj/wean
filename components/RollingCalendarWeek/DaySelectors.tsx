@@ -22,7 +22,7 @@ export const DaySelectors = () => {
 
     dayButtons.push(
       <TouchableOpacity style={styles.button}>
-        <Text style={[styles.dayName, styles.text]}>{dayName}</Text>
+        <Text style={[styles.text,styles.dayName]}>{dayName}</Text>
         <Card style={styles.numCard}><Text style={styles.text}>{dayDay}</Text></Card>
       </TouchableOpacity>
     );
@@ -60,6 +60,8 @@ export const DaySelectors = () => {
       text: {
           textTransform: 'uppercase' as 'uppercase',
           fontSize: 10,
-          fontWeight: 'bold' as 'bold'
+          fontWeight: 'bold' as 'bold',
+          color: theme.colors.onSecondaryContainer,
+
       },
   });
