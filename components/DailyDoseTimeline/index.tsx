@@ -3,13 +3,7 @@ import {StyleSheet, FlatList, View} from 'react-native';
 import { Card, Title, Paragraph } from 'react-native-paper';
 import {DailyDoseGauge} from "../DailyDoseGauge";
 import {Index as RollingCalendarWeek} from "../../components/RollingCalendarWeek";
-
-// Define the data for the timeline
-const timelineData = [
-  { title: 'Morning jont', description: 'Start your day with a ride...', time: '08:00 AM' },
-  { title: 'Breakfast', description: 'Have a healthy breakfast...', time: '09:00 AM' },
-  // Add more timeline entries here
-];
+import { useDoses } from  '../../hooks/useDoses';
 
 // Custom TimelineItem component
 const TimelineItem = ({ title, description, time }) => (
@@ -36,14 +30,16 @@ const ListHeader = () => (
     <DailyDoseGauge />
   </View>
 );
+  // Define the data for the timeline
+  const { doses } = useDoses();
 
   return (
     // Wrap the FlatList with a ScrollView
       <FlatList
-        data={timelineData}
+        data={doses}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
-          <TimelineItem title={item.title} description={item.description} time={item.time} />
+          <TimelineItem title={item.substance} description={item.amount} time={item.doseUnit} />
         )}
         ListHeaderComponent={ListHeader}
 

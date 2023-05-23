@@ -45,7 +45,7 @@ const dosesConverter: ModelConverter = {
   },
 };
 
-const useDoses = (): DosesProviderType => {
+export const useDoses = (): DosesProviderType => {
   const [doses, setDoses] = useState<Dose[]>([]);
   const {user}: FireauthType = useFireauth();
   const {db} = useFirebase();
@@ -77,5 +77,3 @@ const useDoses = (): DosesProviderType => {
 
   return { doses, addDose };
 }
-
-export default useDoses;
