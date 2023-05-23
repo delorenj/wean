@@ -19,7 +19,12 @@ async function importData() {
     crlfDelay: Infinity
   });
 
+  let lineCount = 0;
+
   for await (const line of rl) {
+    lineCount++;
+    console.log(`Processing line ${lineCount}: ${line}`);
+
     const docData = JSON.parse(line);
     const userId = docData.userId;
     const timestamp = Math.round(new Date(docData.timestamp).getTime() / 1000); // Convert to epoch time in seconds
@@ -29,8 +34,13 @@ async function importData() {
     delete docData.timestamp;
 
     // Add the dose event data to the user's doses collection, with the document ID being the timestamp
+    console.log(`Adding document with ID ${timestamp} to collection doses-${userId}`);
     await db.collection(`doses-${userId}`).doc(String(timestamp)).set(docData);
+    console.log(`Added document with ID ${timestamp} to collection doses-${userId}`);
   }
+  console.log(`Finished processing ${lineCount} lines.`);
 }
 
-importData().catch(console.error);
+importData().catch(error => {
+  console.error(`Error during import: ${error}`);
+});
