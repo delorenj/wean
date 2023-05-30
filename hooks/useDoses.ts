@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {Model, ModelConverter} from '../models/Model';
 import useFireauth, {FireauthType} from "./useFireauth";
-import {onSnapshot, doc, setDoc} from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc, setDoc} from "firebase/firestore";
 import {useFirebase} from "../context/firebaseConfig";
 
 interface Dose extends Model {
@@ -51,16 +51,23 @@ export const useDoses = (): DosesProviderType => {
   const {db} = useFirebase();
 
   useEffect(() => {
-    if(!db || !user) return;
-    const unsub = onSnapshot(doc(db, "doses", user.uid).withConverter(dosesConverter), (doc) => {
-      const source = doc.metadata.hasPendingWrites ? "Local" : "Server";
-      console.log(source, " data: ", doc.data());
-      if(!doc.data()) {
-        setDoses([]);
-      } else {
-        setDoses(doc.data());
-      }
+    if (!db || !user) return;
+  console.log('User:', user);   // log user
+  console.log('DB:', db);      // log database
+
+    const dosesRef = collection(db, `doses-${user.uid}`).withConverter(dosesConverter);
+    console.log('DosesRef:', dosesRef);   // log DosesRef
+
+    const unsub = onSnapshot(dosesRef, (querySnapshot) => {
+      console.log('onSnapshot triggered');   // log when onSnapshot triggers
+      const dosesData = [];
+      querySnapshot.forEach((doc) => {
+        dosesData.push(doc.data());
+      });
+      setDoses(dosesData);
     });
+
+    return unsub;
   }, [user, db]);
 
   const addDose = (dose: Dose) => {

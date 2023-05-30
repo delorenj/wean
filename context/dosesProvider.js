@@ -1,12 +1,12 @@
 import {createContext, useContext} from "react";
 import useFirestore from "../hooks/useFirestore";
-import { AuthContext } from './AuthProvider'; // Assuming you have an AuthProvider to get the current user's id
+import useFireauth from "../hooks/useFireauth";
 
 export const DosesContext = createContext(null);
 
 export const DosesProvider = ({ children }) => {
-  const { currentUser } = useContext(AuthContext); // get current user from AuthContext
-  const {docs} = useFirestore(`doses-${currentUser.uid}`) // assuming currentUser.uid gives the userId
+  const {user} = useFireauth();
+  const {docs} = user ? useFirestore(`doses-${user.uid}`) : {docs: []};
   return (
     <DosesContext.Provider value={ { docs } }>
       {children}
