@@ -6,13 +6,18 @@ import useFireauth from "../hooks/useFireauth";
 import {SafeAreaView} from "react-native-safe-area-context";
 import {DailyProvider} from "../context/dailyProvider";
 import TimelineList from "../components/DailyDoseTimeline";
+import {useState} from "react";
 
 export const DailyPage = () => {
   const theme = useTheme()
   const styles = useMainStyles(theme)
   const {db} = useFirebase();
   const {user} = useFireauth();
+  const [fabState, setFabState] = useState({ open: false });
 
+  const onFabStateChange = ({ open }) => setFabState({ open });
+
+  const { open } = fabState;
   // Function to handle the onPress event of the FAB
   const handleAddDose = () => {
     // Logic to add a new dose to the timeline
@@ -27,12 +32,36 @@ export const DailyPage = () => {
           }
         </ScrollView>
                 {user && (
-          <FAB
-            style={fabStyle}
-            icon="plus"
-            onPress={handleAddDose}
-          />
-        )}
+        <FAB.Group
+          open={open}
+          visible
+          icon={open ? 'pill' : 'plus'}
+          actions={[
+            { icon: 'plus', onPress: () => console.log('Pressed add') },
+            {
+              icon: 'star',
+              label: 'Star',
+              onPress: () => console.log('Pressed star'),
+            },
+            {
+              icon: 'email',
+              label: 'Email',
+              onPress: () => console.log('Pressed email'),
+            },
+            {
+              icon: 'bell',
+              label: 'Remind',
+              onPress: () => console.log('Pressed notifications'),
+            },
+          ]}
+          onStateChange={onFabStateChange}
+          onPress={() => {
+            if (open) {
+              // do something if the speed dial is open
+            }
+          }}
+        />
+                )}
       </SafeAreaView>
     </DailyProvider>
   );
