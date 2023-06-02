@@ -35,23 +35,23 @@ export const DailyPage = () => {
         <FAB.Group
           open={open}
           visible
-          icon={open ? 'pill' : 'plus'}
+          icon={open ? 'plus' : 'plus'}
           actions={[
             { icon: 'plus', onPress: () => console.log('Pressed add') },
             {
-              icon: 'star',
-              label: 'Star',
-              onPress: () => console.log('Pressed star'),
+              icon: 'leaf',
+              label: 'Kratom',
+              onPress: () => console.log('Pressed Kratom'),
             },
             {
-              icon: 'email',
-              label: 'Email',
-              onPress: () => console.log('Pressed email'),
+              icon: 'cigar',
+              label: 'Cigarette',
+              onPress: () => console.log('Pressed cigarette'),
             },
             {
-              icon: 'bell',
-              label: 'Remind',
-              onPress: () => console.log('Pressed notifications'),
+              icon: 'coffee',
+              label: 'Coffee',
+              onPress: () => console.log('Pressed coffee'),
             },
           ]}
           onStateChange={onFabStateChange}

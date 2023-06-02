@@ -4,7 +4,7 @@ import useFireauth, {FireauthType} from "./useFireauth";
 import { collection, query, where, onSnapshot, doc, setDoc} from "firebase/firestore";
 import {useFirebase} from "../context/firebaseConfig";
 
-interface Dose extends Model {
+export interface Dose extends Model {
   userId: string,
   substance: string,
   amount: number,

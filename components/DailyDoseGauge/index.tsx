@@ -4,15 +4,17 @@ import CircularProgress from "react-native-circular-progress-indicator";
 import {useMainStyles} from "../../hooks/useMainStyles";
 import {Animated, StyleSheet, Text} from "react-native";
 import View = Animated.View;
-import React from "react";
+import React, {useEffect, useState} from "react";
 
 export const DailyDoseGauge = () => {
+
     const theme = useTheme();
     const styles = useMainStyles(theme);
-    const {selectedDate} = useDaily();
+    const {selectedDate, isFirstRender, setIsFirstRender} = useDaily();
 
-    // @ts-ignore
-    // @ts-ignore
+    const onAnimationComplete = () => {
+        setIsFirstRender(false);
+    }
     return (
         <Card style={[styles.card, {flex: 0, justifyContent: 'center', alignItems: 'center'}]}>
             <Title style={{textAlign: 'center' as 'center', marginBottom: 10}}>Daily Dose</Title>
@@ -25,6 +27,8 @@ export const DailyDoseGauge = () => {
                 inActiveStrokeOpacity={0.5}
                 inActiveStrokeWidth={30}
                 activeStrokeWidth={20}
+                duration={isFirstRender ? 1000 : 0} // Set duration to 0 on subsequent renders
+                onAnimationComplete={onAnimationComplete}
             />
             <View style={localStyles.container}>
                 <View style={localStyles.left}>
