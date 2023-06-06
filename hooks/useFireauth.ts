@@ -15,23 +15,26 @@ const useFireauth = (): FireauthType => {
 
   useEffect(() => {
     signInAnonymously(auth)
-      .then(() => {
-        console.log("YAY!")
+      .then((userCredential) => {
+        console.log("signInAnonymously(): " + userCredential.user.uid)
       })
       .catch((e) => {
         console.log(`damn: ${e.message}`)
       })
-  }, [auth, setUser]);
 
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      console.log(`Signed in!: ${user.uid}`)
-      setUser(user)
-    } else {
-      console.log("Signed out!")
-      setUser(null)
-    }
-  });
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log(`onAuthStateChanged(): ${user.uid}`)
+        setUser(user)
+      } else {
+        console.log("onAuthStateChanged(): Signed out!")
+        setUser(null)
+      }
+    });
+
+    // Return a cleanup function to unsubscribe from the auth state change listener
+    return unsubscribe;
+  }, [auth, setUser]);
 
   return { user };
 }
