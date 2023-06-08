@@ -51,7 +51,7 @@ export const DaySelectors = () => {
     }, [theme, dayDate, selectedDate])
 
     dayButtons.push(
-      <TouchableOpacity style={styles.button} onPress={() => setSelectedDate(dayDate)}>
+      <TouchableOpacity key={dayName} style={styles.button} onPress={() => setSelectedDate(dayDate)}>
         <Text style={[styles.text,styles.dayName]}>{dayName}</Text>
         <Card style={styles.numCard}><Text style={styles.text}>{dayDay}</Text></Card>
       </TouchableOpacity>

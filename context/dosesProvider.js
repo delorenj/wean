@@ -6,7 +6,7 @@ export const DosesContext = createContext(null);
 
 export const DosesProvider = ({ children }) => {
   const {user} = useFireauth();
-  const {docs} = user ? useFirestore(`doses-${user.uid}`) : {docs: []};
+  const {docs} = useFirestore(user ? `doses-${user.uid}` : undefined);
   return (
     <DosesContext.Provider value={ { docs } }>
       {children}

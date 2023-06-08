@@ -9,6 +9,7 @@ import TimelineList from "../components/DailyDoseTimeline";
 import Slider from '@react-native-community/slider';
 
 import {useState} from "react";
+import {DoseForm} from "../components/DoseForm";
 
 export const DailyPage = () => {
     const theme = useTheme()
@@ -16,68 +17,29 @@ export const DailyPage = () => {
     const {db} = useFirebase();
     const {user} = useFireauth();
     const [fabState, setFabState] = useState({open: false});
-    const [showSlider, setShowSlider] = useState(false);
+    const [showForm, setShowForm] = useState(false);
 
-    const onFabStateChange = ({open}) => setFabState({open});
-
-    const {open} = fabState;
     // Function to handle the onPress event of the FAB
     const handleAddDose = () => {
         // Logic to add a new dose to the timeline
-        console.log('Add new dose');
+        setShowForm(true);
     };
     return (
         <DailyProvider>
             <SafeAreaView style={styles.safeAreaView}>
-                <ScrollView contentContainerStyle={styles.container}>
-                    {user &&
+                    {user && !showForm &&
                         <TimelineList/>
                     }
-                </ScrollView>
-                {user && (
-                    <FAB.Group
-                        open={open}
-                        visible
-                        icon={open ? 'plus' : 'plus'}
-                        actions={[
-                            {icon: 'plus', onPress: () => console.log('Pressed add')},
-                            {
-                                icon: 'leaf',
-                                label: 'Kratom',
-                                onPress: () => {
-                                    console.log('Pressed Kratom');
-                                    setShowSlider(true);
-                                }
-                            },
-                            {
-                                icon: 'cigar',
-                                label: 'Cigarette',
-                                onPress: () => console.log('Pressed cigarette'),
-                            },
-                            {
-                                icon: 'coffee',
-                                label: 'Coffee',
-                                onPress: () => console.log('Pressed coffee'),
-                            },
-                        ]}
-                        onStateChange={onFabStateChange}
-                        onPress={() => {
-                            if (open) {
-                                // do something if the speed dial is open
-                            }
-                        }}
+                {user && !showForm && (
+                    <FAB
+                        visible={true}
+                        icon='plus'
+                        style={fabStyle}
+                        onPress={handleAddDose}
                     />
                 )}
-                {showSlider && (
-                    <View style={styles.sliderContainer}>
-                        <Slider
-                            style={{width: 200, height: 40}}
-                            minimumValue={0}
-                            maximumValue={1}
-                            minimumTrackTintColor="#FFFFFF"
-                            maximumTrackTintColor="#000000"
-                        />
-                    </View>
+                {showForm && (
+                    <DoseForm   />
                 )}
             </SafeAreaView>
         </DailyProvider>
@@ -89,6 +51,15 @@ const styles = {
     },
     container: {
         flexGrow: 1,
+    },
+
+    sliderContainer: {
+        position: 'absolute',
+        bottom: 50, // You can adjust this value according to your needs
+        width: '100%',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        padding: 10,
     },
 };
 const fabStyle = {
