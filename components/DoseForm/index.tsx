@@ -1,45 +1,81 @@
 import React, { useState } from 'react';
-import { View } from 'react-native';
-import { TextInput, Button, Menu } from 'react-native-paper';
+import { View, Text, StyleSheet } from 'react-native';
+import { RadioButton } from 'react-native-paper';
+import Slider from '@react-native-community/slider';
 
 export const DoseForm = () => {
-  const [amount, setAmount] = useState('0');
-  const [unit, setUnit] = useState('gram');
-  const [visible, setVisible] = useState(false);
-
-  const openMenu = () => setVisible(true);
-  const closeMenu = () => setVisible(false);
-
-  const handleAmountChange = (value) => {
-    // Restrict input to floating point number with 1 significant digit
-    const regex = /^[0-9]*\.?[0-9]?$/;
-    if (regex.test(value)) {
-      setAmount(value);
-    }
-  };
-
-  const handleSubmit = () => {
-    // Handle form submission
-    console.log(`Submitted amount: ${amount} ${unit}`);
-  };
+  const [dosage, setDosage] = useState(0);
+  const [value, setValue] = useState('gram');
 
   return (
-      <View>
-        <TextInput
-          label='Amount'
-          value={amount}
-          onChangeText={handleAmountChange}
-          keyboardType='numeric'
-        />
-        <Menu
-          visible={visible}
-          onDismiss={closeMenu}
-          anchor={<Button onPress={openMenu}>{unit}</Button>}
-        >
-          <Menu.Item onPress={() => {setUnit('gram'); closeMenu();}} title='Gram' />
-          <Menu.Item onPress={() => {setUnit('ounce'); closeMenu();}} title='Ounce' />
-        </Menu>
-        <Button onPress={handleSubmit}>Submit</Button>
+    <View style={styles.container}>
+      <View style={styles.radioContainer}>
+        <RadioButton.Group onValueChange={newValue => setValue(newValue)} value={value}>
+          <View style={styles.radio}>
+            <RadioButton color="white" uncheckedColor="white" value="gram" />
+            <Text style={styles.radioText}>Gram</Text>
+          </View>
+
+          <View style={styles.radio}>
+            <RadioButton color="white" uncheckedColor="white" value="ounce" />
+            <Text style={styles.radioText}>Ounce</Text>
+          </View>
+        </RadioButton.Group>
       </View>
+      <View style={styles.dosageText}>
+        <Text style={styles.dosageText}>{dosage.toFixed(1)}</Text></View>
+      <View style={styles.sliderContainer}>
+        <Slider
+          style={styles.slider}
+          minimumValue={0}
+          maximumValue={20}
+          step={0.25}
+          minimumTrackTintColor="#FFFFFF"
+          maximumTrackTintColor="#000000"
+          thumbTintColor="#FFFFFF"
+          //thumbTouchSize={{ width: 50, height: 50 }} // increase touch area
+          onValueChange={value => setDosage(value)}
+          value={dosage}
+        />
+      </View>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 20,
+    backgroundColor: 'black',
+  },
+  radioContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  radio: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 20,
+  },
+  radioText: {
+    color: 'white',
+    marginLeft: 5,
+    fontSize: 24,
+  },
+  sliderContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  slider: {
+    flex: 1,
+    marginRight: 10,
+  },
+  dosageText: {
+    color: 'white',
+    fontSize: 80,
+    textAlign: 'center',
+    marginTop: 20,
+  },
+});
