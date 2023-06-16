@@ -29,7 +29,7 @@ export const DoseForm = () => {
           style={styles.slider}
           minimumValue={0}
           maximumValue={20}
-          step={0.25}
+          step={0.5}
           minimumTrackTintColor="#FFFFFF"
           maximumTrackTintColor="#000000"
           thumbTintColor="#FFFFFF"
@@ -64,9 +64,10 @@ const styles = StyleSheet.create({
   },
   sliderContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     justifyContent: 'center',
-    marginBottom: 20,
+    marginBottom: 200,
+      paddingTop: 200
   },
   slider: {
     flex: 1,
