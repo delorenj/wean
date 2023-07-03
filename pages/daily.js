@@ -11,7 +11,7 @@ import Slider from '@react-native-community/slider';
 import {useState} from "react";
 import {DoseForm} from "../components/DoseForm";
 
-export const DailyPage = () => {
+export const DailyPage = ({navigator}) => {
     const theme = useTheme()
     const styles = useMainStyles(theme)
     const {db} = useFirebase();

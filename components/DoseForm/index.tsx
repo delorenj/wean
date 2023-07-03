@@ -1,11 +1,21 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { RadioButton } from 'react-native-paper';
 import Slider from '@react-native-community/slider';
+import {useNavigation} from "@react-navigation/native";
 
 export const DoseForm = () => {
+  const navigation = useNavigation();
   const [dosage, setDosage] = useState(0);
   const [value, setValue] = useState('gram');
+
+    useEffect(() => {
+      console.log('DoseForm useEffect')
+      if(!navigation) return;
+      console.log('DoseForm useEffect navigation')
+      navigation.setOptions({ swipeEnabled: false });
+
+  }, [navigation]);
 
   return (
     <View style={styles.container}>
