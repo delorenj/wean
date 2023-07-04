@@ -41,8 +41,8 @@ export const DoseForm = () => {
           maximumValue={20}
           step={0.5}
           minimumTrackTintColor="#FFFFFF"
-          maximumTrackTintColor="#000000"
-          thumbTintColor="#FFFFFF"
+          maximumTrackTintColor="#FFFFFF"
+          thumbTintColor="#FF0000"
           //thumbTouchSize={{ width: 50, height: 50 }} // increase touch area
           onValueChange={value => setDosage(value)}
           value={dosage}
