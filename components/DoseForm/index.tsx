@@ -1,26 +1,30 @@
-import React, {useEffect, useState} from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Button } from 'react-native';
 import { RadioButton } from 'react-native-paper';
 import Slider from '@react-native-community/slider';
-import {useNavigation} from "@react-navigation/native";
+import { useNavigation } from '@react-navigation/native';
 
 export const DoseForm = () => {
   const navigation = useNavigation();
   const [dosage, setDosage] = useState(0);
   const [value, setValue] = useState('gram');
 
-    useEffect(() => {
-      console.log('DoseForm useEffect')
-      if(!navigation) return;
-      console.log('DoseForm useEffect navigation')
-      navigation.setOptions({ swipeEnabled: false });
-
+  useEffect(() => {
+    console.log('DoseForm useEffect');
+    if (!navigation) return;
+    console.log('DoseForm useEffect navigation');
+    navigation.setOptions({ swipeEnabled: false });
   }, [navigation]);
+
+  const handleAccept = () => {
+    // Perform actions with the accepted value
+    console.log('Accepted value:', dosage, value);
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.radioContainer}>
-        <RadioButton.Group onValueChange={newValue => setValue(newValue)} value={value}>
+        <RadioButton.Group onValueChange={(newValue) => setValue(newValue)} value={value}>
           <View style={styles.radio}>
             <RadioButton color="white" uncheckedColor="white" value="gram" />
             <Text style={styles.radioText}>Gram</Text>
@@ -33,7 +37,8 @@ export const DoseForm = () => {
         </RadioButton.Group>
       </View>
       <View style={styles.dosageText}>
-        <Text style={styles.dosageText}>{dosage.toFixed(1)}</Text></View>
+        <Text style={styles.dosageText}>{dosage.toFixed(1)}</Text>
+      </View>
       <View style={styles.sliderContainer}>
         <Slider
           style={styles.slider}
@@ -43,11 +48,11 @@ export const DoseForm = () => {
           minimumTrackTintColor="#FFFFFF"
           maximumTrackTintColor="#FFFFFF"
           thumbTintColor="#FF0000"
-          //thumbTouchSize={{ width: 50, height: 50 }} // increase touch area
-          onValueChange={value => setDosage(value)}
+          onValueChange={(value) => setDosage(value)}
           value={dosage}
         />
       </View>
+      <Button title="Accept" onPress={handleAccept} />
     </View>
   );
 };
@@ -77,7 +82,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     justifyContent: 'center',
     marginBottom: 200,
-      paddingTop: 200
+    paddingTop: 200,
   },
   slider: {
     flex: 1,
