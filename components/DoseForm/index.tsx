@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Button } from 'react-native';
-import { RadioButton } from 'react-native-paper';
+import { View, Text, StyleSheet } from 'react-native';
+import { RadioButton, Button } from 'react-native-paper';
 import Slider from '@react-native-community/slider';
 import { useNavigation } from '@react-navigation/native';
-
+import { useDoses, Dose } from '../../hooks/useDoses';
 export const DoseForm = () => {
+
+  let { addDose } = useDoses();
   const navigation = useNavigation();
   const [dosage, setDosage] = useState(0);
   const [value, setValue] = useState('gram');
@@ -18,7 +20,17 @@ export const DoseForm = () => {
 
   const handleAccept = () => {
     // Perform actions with the accepted value
-    console.log('Accepted value:', dosage, value);
+    let dose: Dose = {
+        substance: 'Cocaine',
+        amount: dosage,
+        doseUnit: value,
+        timestamp: new Date().toString(),
+        userId: '1',
+        notes: 'test',
+        method: 'snorted',
+    }
+    console.log('Accepted value:', dose);
+    addDose(dose);
   };
 
   return (
@@ -52,7 +64,9 @@ export const DoseForm = () => {
           value={dosage}
         />
       </View>
-      <Button title="Accept" onPress={handleAccept} />
+      <Button mode="contained" onPress={handleAccept} style={styles.button}>
+        Accept
+      </Button>
     </View>
   );
 };
@@ -92,6 +106,10 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 80,
     textAlign: 'center',
+    marginTop: 20,
+  },
+  button: {
+    borderRadius: 24,
     marginTop: 20,
   },
 });
