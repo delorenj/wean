@@ -10,19 +10,21 @@ import Slider from '@react-native-community/slider';
 
 import {useState} from "react";
 import {DoseForm} from "../components/DoseForm";
+import {useNavigation} from "@react-navigation/native";
 
-export const DailyPage = ({navigator}) => {
+export const DailyPage = () => {
     const theme = useTheme()
     const styles = useMainStyles(theme)
     const {db} = useFirebase();
     const {user} = useFireauth();
     const [fabState, setFabState] = useState({open: false});
     const [showForm, setShowForm] = useState(false);
-
+    const navigation = useNavigation();
     // Function to handle the onPress event of the FAB
     const handleAddDose = () => {
         // Logic to add a new dose to the timeline
-        setShowForm(true);
+        // setShowForm(true);
+        navigation.navigate('Dose');
     };
     return (
         <DailyProvider>
@@ -37,9 +39,6 @@ export const DailyPage = ({navigator}) => {
                         style={fabStyle}
                         onPress={handleAddDose}
                     />
-                )}
-                {showForm && (
-                    <DoseForm   />
                 )}
             </SafeAreaView>
         </DailyProvider>

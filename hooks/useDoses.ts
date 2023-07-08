@@ -5,13 +5,11 @@ import { collection, query, where, onSnapshot, doc, setDoc} from "firebase/fires
 import {useFirebase} from "../context/firebaseConfig";
 
 export interface Dose extends Model {
-  userId: string,
   substance: string,
   amount: number,
-  timestamp: string,
-  notes: string,
+  notes?: string,
   doseUnit: string,
-  method: string
+  method?: string
 }
 
 export interface DosesProviderType {
@@ -22,22 +20,18 @@ export interface DosesProviderType {
 const dosesConverter: ModelConverter = {
   toFirestore: (dose: Dose) => {
     return {
-      userId: dose.userId,
       substance: dose.substance,
       amount: dose.amount,
-      timestamp: dose.timestamp,
-      notes: dose.notes,
+      notes: dose.notes || '',
       doseUnit: dose.doseUnit,
-      method: dose.method
+      method: dose.method || ''
     }
   },
   fromFirestore: (snapshot: any, options: any) => {
     const data = snapshot.data(options);
     return {
-      userId: data.userId,
       substance: data.substance,
       amount: data.amount,
-      timestamp: data.timestamp,
       notes: data.notes,
       doseUnit: data.doseUnit,
       method: data.method

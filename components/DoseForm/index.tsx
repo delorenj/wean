@@ -21,16 +21,13 @@ export const DoseForm = () => {
   const handleAccept = () => {
     // Perform actions with the accepted value
     let dose: Dose = {
-        substance: 'Cocaine',
+        substance: 'Kratom',
         amount: dosage,
         doseUnit: value,
-        timestamp: new Date().toString(),
-        userId: '1',
-        notes: 'test',
-        method: 'snorted',
     }
-    console.log('Accepted value:', dose);
     addDose(dose);
+    navigation.navigate('Daily');
+
   };
 
   return (
