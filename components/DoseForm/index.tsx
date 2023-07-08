@@ -26,7 +26,8 @@ export const DoseForm = () => {
         doseUnit: value,
     }
     addDose(dose);
-    navigation.navigate('Daily');
+    // @ts-ignore
+    navigation.navigate("Daily");
 
   };
 
