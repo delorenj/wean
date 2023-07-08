@@ -52,9 +52,6 @@ export const useDoses = (): DosesProviderType => {
 
   useEffect(() => {
     if (!db || !user) return;
-  console.log('User:', user);   // log user
-  console.log('DB:', db);      // log database
-
     const dosesRef = collection(db, `doses-${user.uid}`).withConverter(dosesConverter);
     console.log('DosesRef:', dosesRef);   // log DosesRef
 
@@ -72,10 +69,11 @@ export const useDoses = (): DosesProviderType => {
 
   const addDose = (dose: Dose) => {
     if (!user || !db ) return;
-    const ref = doc(db, "doses", user.uid).withConverter(dosesConverter);
+    const timestamp = Math.round(new Date().getTime() / 1000); // Convert to epoch time in seconds
+    const ref = doc(db, `doses-${user.uid}`, timestamp.toString()).withConverter(dosesConverter);
     setDoc(ref, dose)
       .then(data => {
-        console.log("Yay! Added new dose!")
+        console.log("Yay! Added new dose!: userId=", user.uid, "dose=", dose)
       })
       .catch(e => {
         console.log(`There was an error pushing new dose to firestore with userId=${user.uid}`)
