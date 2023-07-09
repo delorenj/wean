@@ -21,15 +21,17 @@ const TimelineItem = ({ title, description, time }) => (
   </View>
 
 );
-// Vertical timeline list component
-const TimelineList = () => {
-  // List header component
+
 const ListHeader = () => (
   <View>
     <RollingCalendarWeek />
     <DailyDoseGauge />
   </View>
 );
+
+// Vertical timeline list component
+// Vertical timeline list component
+const TimelineList = () => {
   // Define the data for the timeline
   const { doses } = useDoses();
 
