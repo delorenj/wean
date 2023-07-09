@@ -4,6 +4,8 @@ import { RadioButton, Button } from 'react-native-paper';
 import Slider from '@react-native-community/slider';
 import { useNavigation } from '@react-navigation/native';
 import { useDoses, Dose } from '../../hooks/useDoses';
+import { Timestamp } from "firebase/firestore";
+
 export const DoseForm = () => {
 
   let { addDose } = useDoses();
@@ -12,9 +14,7 @@ export const DoseForm = () => {
   const [value, setValue] = useState('gram');
 
   useEffect(() => {
-    console.log('DoseForm useEffect');
     if (!navigation) return;
-    console.log('DoseForm useEffect navigation');
     navigation.setOptions({ swipeEnabled: false });
   }, [navigation]);
 
@@ -24,6 +24,7 @@ export const DoseForm = () => {
         substance: 'Kratom',
         amount: dosage,
         doseUnit: value,
+        date: Timestamp.now()
     }
     addDose(dose);
     // @ts-ignore

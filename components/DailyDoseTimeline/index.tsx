@@ -1,6 +1,6 @@
 import React from 'react';
 import {StyleSheet, FlatList, View} from 'react-native';
-import { Card, Title, Paragraph } from 'react-native-paper';
+import { Title, Paragraph } from 'react-native-paper';
 import {DailyDoseGauge} from "../DailyDoseGauge";
 import {Index as RollingCalendarWeek} from "../../components/RollingCalendarWeek";
 import { useDoses } from  '../../hooks/useDoses';

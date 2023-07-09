@@ -1,78 +1,96 @@
-import { useEffect, useState } from 'react';
+import {useEffect, useState} from 'react';
 import {Model, ModelConverter} from '../models/Model';
 import useFireauth, {FireauthType} from "./useFireauth";
-import { collection, query, where, onSnapshot, doc, setDoc} from "firebase/firestore";
+import {collection, query, where, onSnapshot, doc, setDoc} from "firebase/firestore";
 import {useFirebase} from "../context/firebaseConfig";
-
+import {startOfDay, endOfDay} from 'date-fns';
+import {useDaily} from "../context/dailyProvider";
+import {firestore} from "firebase-admin";
+import { Timestamp } from "firebase/firestore";
 export interface Dose extends Model {
-  substance: string,
-  amount: number,
-  notes?: string,
-  doseUnit: string,
-  method?: string
+    substance: string,
+    amount: number,
+    notes?: string,
+    doseUnit: string,
+    method?: string,
+    date: Timestamp
 }
 
 export interface DosesProviderType {
-  doses: Dose[],
-  addDose: (dose: Dose) => void
+    doses: Dose[],
+    addDose: (dose: Dose) => void
 }
 
 const dosesConverter: ModelConverter = {
-  toFirestore: (dose: Dose) => {
-    return {
-      substance: dose.substance,
-      amount: dose.amount,
-      notes: dose.notes || '',
-      doseUnit: dose.doseUnit,
-      method: dose.method || ''
-    }
-  },
-  fromFirestore: (snapshot: any, options: any) => {
-    const data = snapshot.data(options);
-    return {
-      substance: data.substance,
-      amount: data.amount,
-      notes: data.notes,
-      doseUnit: data.doseUnit,
-      method: data.method
-    }
-  },
+    toFirestore: (dose: Dose) => {
+        return {
+            substance: dose.substance,
+            amount: dose.amount,
+            notes: dose.notes || '',
+            doseUnit: dose.doseUnit,
+            method: dose.method || '',
+            date: dose.date
+        }
+    },
+    fromFirestore: (snapshot: any, options: any) => {
+        const data = snapshot.data(options);
+        return {
+            substance: data.substance,
+            amount: data.amount,
+            notes: data.notes,
+            doseUnit: data.doseUnit,
+            method: data.method,
+            date: data.date
+        }
+    },
 };
 
 export const useDoses = (): DosesProviderType => {
-  const [doses, setDoses] = useState<Dose[]>([]);
-  const {user}: FireauthType = useFireauth();
-  const {db} = useFirebase();
+    const [doses, setDoses] = useState<Dose[]>([]);
+    const [unsubscribe, setUnsubscribe] = useState<() => void>();
+    const {user}: FireauthType = useFireauth();
+    const {db} = useFirebase();
+    const {selectedDate} = useDaily();
 
-  useEffect(() => {
-    if (!db || !user) return;
-    const dosesRef = collection(db, `doses-${user.uid}`).withConverter(dosesConverter);
-    console.log('DosesRef:', dosesRef);   // log DosesRef
+    useEffect(() => {
+        if (!db || !user || !selectedDate) return;
+        getDosesByDate(selectedDate);
+    }, [user, db, selectedDate]);
 
-    const unsub = onSnapshot(dosesRef, (querySnapshot) => {
-      console.log('onSnapshot triggered');   // log when onSnapshot triggers
-      const dosesData = [];
-      querySnapshot.forEach((doc) => {
-        dosesData.push(doc.data());
-      });
-      setDoses(dosesData);
-    });
 
-    return unsub;
-  }, [user, db]);
+    const getDosesByDate = date => {
+        const dosesRef = collection(db, `doses-${user.uid}`).withConverter(dosesConverter);
+        console.log('DosesRef:', dosesRef);   // log DosesRef
 
-  const addDose = (dose: Dose) => {
-    if (!user || !db ) return;
-    const timestamp = Math.round(new Date().getTime() / 1000); // Convert to epoch time in seconds
-    const ref = doc(db, `doses-${user.uid}`, timestamp.toString()).withConverter(dosesConverter);
-    setDoc(ref, dose)
-      .then(data => {
-        console.log("Yay! Added new dose!: userId=", user.uid, "dose=", dose)
-      })
-      .catch(e => {
-        console.log(`There was an error pushing new dose to firestore with userId=${user.uid}`)
-      })
-  }
+        // Get today's start and end time
+        const startOfDay1 = Timestamp.fromDate(startOfDay(date))
+        const endOfDay1 = Timestamp.fromDate(endOfDay(date))
+        console.log('startOfDay1:', startOfDay1);   // log startOfDay1
+        console.log('endOfDay1:', endOfDay1);   // log endOfDay1
+        // Modify query to only fetch documents within today's date range
+        const dosesQuery = query(dosesRef, where("date", ">=", startOfDay1), where("date", "<=", endOfDay1));
 
-  return { doses, addDose };
+        const unsub = onSnapshot(dosesQuery, (querySnapshot) => {
+            console.log('onSnapshot triggered');   // log when onSnapshot triggers
+            const dosesData = [];
+            querySnapshot.forEach((doc) => {
+                dosesData.push(doc.data());
+            });
+            console.log('dosesData:', dosesData);   // log dosesData
+            setDoses(dosesData);
+        });
+    }
+    const addDose = (dose: Dose) => {
+        if (!user || !db) return;
+        const ref = doc(db, `doses-${user.uid}`, dose.date.seconds.toString()).withConverter(dosesConverter);
+        setDoc(ref, dose)
+            .then(data => {
+                console.log("Yay! Added new dose!: userId=", user.uid, "dose=", dose)
+            })
+            .catch(e => {
+                console.log(`There was an error pushing new dose to firestore with userId=${user.uid}`)
+            })
+    }
+
+    return {doses, addDose};
 }

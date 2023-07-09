@@ -27,21 +27,19 @@ export const DailyPage = () => {
         navigation.navigate('Dose');
     };
     return (
-        <DailyProvider>
-            <SafeAreaView style={styles.safeAreaView}>
-                    {user && !showForm &&
-                        <TimelineList/>
-                    }
-                {user && !showForm && (
-                    <FAB
-                        visible={true}
-                        icon='plus'
-                        style={fabStyle}
-                        onPress={handleAddDose}
-                    />
-                )}
-            </SafeAreaView>
-        </DailyProvider>
+        <SafeAreaView style={styles.safeAreaView}>
+            {user && !showForm &&
+                <TimelineList/>
+            }
+            {user && !showForm && (
+                <FAB
+                    visible={true}
+                    icon='plus'
+                    style={fabStyle}
+                    onPress={handleAddDose}
+                />
+            )}
+        </SafeAreaView>
     );
 }
 const styles = {
