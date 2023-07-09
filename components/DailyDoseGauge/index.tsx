@@ -12,7 +12,7 @@ export const DailyDoseGauge = () => {
     const theme = useTheme();
     const styles = useMainStyles(theme);
     const {isFirstRender, setIsFirstRender} = useDaily();
-    const {totalDoses} = useDoses();
+    const {totalDoses, commonUnit} = useDoses();
 
     const onAnimationComplete = () => {
         setIsFirstRender(false);
@@ -23,13 +23,14 @@ export const DailyDoseGauge = () => {
             <CircularProgress
                 value={totalDoses}
                 radius={120}
+                title={commonUnit}
                 progressValueColor={theme.colors.onSurface}
-                activeStrokeColor={theme.colors.onPrimary}
+                activeStrokeColor={theme.colors.primary}
                 inActiveStrokeColor={theme.colors.primary}
                 inActiveStrokeOpacity={0.5}
                 inActiveStrokeWidth={30}
                 activeStrokeWidth={20}
-                duration={isFirstRender ? 1000 : 0} // Set duration to 0 on subsequent renders
+                duration={isFirstRender ? 0 : 500} // Set duration to 0 on subsequent renders
                 onAnimationComplete={onAnimationComplete}
             />
             <View style={localStyles.container}>

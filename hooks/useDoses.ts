@@ -19,7 +19,9 @@ export interface Dose extends Model {
 export interface DosesProviderType {
     doses: Dose[],
     addDose: (dose: Dose) => void,
-    totalDoses: number
+    totalDoses: number,
+    setCommonUnit: (unit: string) => void,
+    commonUnit: string
 }
 
 const dosesConverter: ModelConverter = {
@@ -52,6 +54,7 @@ export const useDoses = (): DosesProviderType => {
     const {db} = useFirebase();
     const {selectedDate} = useDaily();
     const [totalDoses, setTotalDoses] = useState<number>(0);
+    const [commonUnit, setCommonUnit] = useState<string>('g');
 
     useEffect(() => {
         if (!db || !user || !selectedDate) return;
@@ -103,7 +106,6 @@ export const useDoses = (): DosesProviderType => {
 
     useEffect(() => {
             let total = 0;
-            const commonUnit = 'g';
             doses.forEach(dose => {
                 const conversionFactor = doseUnitConversions[dose.doseUnit];
                 if (conversionFactor !== undefined) {
@@ -114,8 +116,8 @@ export const useDoses = (): DosesProviderType => {
             });
 
             setTotalDoses(total / doseUnitConversions[commonUnit]);  // convert total to the common unit
-        }, [doses, doseUnitConversions, setTotalDoses]);
+        }, [doses, doseUnitConversions, setTotalDoses, commonUnit]);
 
 
-    return {doses, addDose, totalDoses};
+    return {doses, addDose, totalDoses, commonUnit, setCommonUnit};
 }
