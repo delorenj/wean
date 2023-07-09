@@ -5,8 +5,8 @@ import {collection, query, where, onSnapshot, doc, setDoc} from "firebase/firest
 import {useFirebase} from "../context/firebaseConfig";
 import {startOfDay, endOfDay} from 'date-fns';
 import {useDaily} from "../context/dailyProvider";
-import {firestore} from "firebase-admin";
-import { Timestamp } from "firebase/firestore";
+import {Timestamp} from "firebase/firestore";
+
 export interface Dose extends Model {
     substance: string,
     amount: number,
@@ -18,7 +18,8 @@ export interface Dose extends Model {
 
 export interface DosesProviderType {
     doses: Dose[],
-    addDose: (dose: Dose) => void
+    addDose: (dose: Dose) => void,
+    totalDoses: number
 }
 
 const dosesConverter: ModelConverter = {
@@ -47,10 +48,10 @@ const dosesConverter: ModelConverter = {
 
 export const useDoses = (): DosesProviderType => {
     const [doses, setDoses] = useState<Dose[]>([]);
-    const [unsubscribe, setUnsubscribe] = useState<() => void>();
     const {user}: FireauthType = useFireauth();
     const {db} = useFirebase();
     const {selectedDate} = useDaily();
+    const [totalDoses, setTotalDoses] = useState<number>(0);
 
     useEffect(() => {
         if (!db || !user || !selectedDate) return;
@@ -70,7 +71,7 @@ export const useDoses = (): DosesProviderType => {
         // Modify query to only fetch documents within today's date range
         const dosesQuery = query(dosesRef, where("date", ">=", startOfDay1), where("date", "<=", endOfDay1));
 
-        const unsub = onSnapshot(dosesQuery, (querySnapshot) => {
+        onSnapshot(dosesQuery, (querySnapshot) => {
             console.log('onSnapshot triggered');   // log when onSnapshot triggers
             const dosesData = [];
             querySnapshot.forEach((doc) => {
@@ -92,5 +93,29 @@ export const useDoses = (): DosesProviderType => {
             })
     }
 
-    return {doses, addDose};
+    const doseUnitConversions: { [unit: string]: number } = {
+        'g': 1,
+        'gram': 1,
+        'oz': 28.3495,
+        'ounce': 28.3495, // This is how many grams are in one ounce
+        // add any other units here, indicating how many grams they correspond to
+    };
+
+    useEffect(() => {
+            let total = 0;
+            const commonUnit = 'g';
+            doses.forEach(dose => {
+                const conversionFactor = doseUnitConversions[dose.doseUnit];
+                if (conversionFactor !== undefined) {
+                    total += dose.amount * conversionFactor;
+                } else {
+                    console.warn(`Unknown dose unit: ${dose.doseUnit}`);
+                }
+            });
+
+            setTotalDoses(total / doseUnitConversions[commonUnit]);  // convert total to the common unit
+        }, [doses, doseUnitConversions, setTotalDoses]);
+
+
+    return {doses, addDose, totalDoses};
 }

@@ -5,12 +5,14 @@ import {useMainStyles} from "../../hooks/useMainStyles";
 import {Animated, StyleSheet, Text} from "react-native";
 import View = Animated.View;
 import React, {useEffect, useState} from "react";
+import {useDoses} from "../../hooks/useDoses";
 
 export const DailyDoseGauge = () => {
 
     const theme = useTheme();
     const styles = useMainStyles(theme);
-    const {selectedDate, isFirstRender, setIsFirstRender} = useDaily();
+    const {isFirstRender, setIsFirstRender} = useDaily();
+    const {totalDoses} = useDoses();
 
     const onAnimationComplete = () => {
         setIsFirstRender(false);
@@ -19,7 +21,7 @@ export const DailyDoseGauge = () => {
         <Card style={[styles.card, {flex: 0, justifyContent: 'center', alignItems: 'center'}]}>
             <Title style={{textAlign: 'center' as 'center', marginBottom: 10}}>Daily Dose</Title>
             <CircularProgress
-                value={60}
+                value={totalDoses}
                 radius={120}
                 progressValueColor={theme.colors.onSurface}
                 activeStrokeColor={theme.colors.onPrimary}
