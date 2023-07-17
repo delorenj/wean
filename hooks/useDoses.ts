@@ -16,12 +16,18 @@ export interface Dose extends Model {
     date: Timestamp
 }
 
+export interface DoseTotalByDate {
+    date: Date,
+    total: number
+}
+
 export interface DosesProviderType {
     doses: Dose[],
     addDose: (dose: Dose) => void,
     totalDoses: number,
     setCommonUnit: (unit: string) => void,
-    commonUnit: string
+    commonUnit: string,
+    getDosesBetweenDates: (startDate: Date, endDate: Date) => Promise<any>
 }
 
 const dosesConverter: ModelConverter = {
@@ -72,7 +78,7 @@ export const useDoses = (): DosesProviderType => {
     const getDosesBetweenDates = async (startDate, endDate) => {
         const datesArray = getDaysArray(startDate, endDate);
         const dosesRef = collection(db, `doses-${user.uid}`).withConverter(dosesConverter);
-        let dosesDataByDate = [];
+        let dosesDataByDate:DoseTotalByDate[] = [];
 
         for (let i = 0; i < datesArray.length; i++) {
             const date = datesArray[i];
@@ -86,7 +92,7 @@ export const useDoses = (): DosesProviderType => {
                 querySnapshot.forEach((doc) => {
                     dosesData.push(doc.data());
                 });
-                dosesDataByDate.push({date: date, doses: dosesData});
+                dosesDataByDate.push({date: date, total: dosesData.map(dose => dose.amount).reduce((a, b) => a + b, 0)});
             });
         }
         return dosesDataByDate;
@@ -149,5 +155,5 @@ export const useDoses = (): DosesProviderType => {
     }, [doses, doseUnitConversions, setTotalDoses, commonUnit]);
 
 
-    return {doses, addDose, totalDoses, commonUnit, setCommonUnit};
+    return {doses, addDose, totalDoses, commonUnit, setCommonUnit, getDosesBetweenDates};
 }

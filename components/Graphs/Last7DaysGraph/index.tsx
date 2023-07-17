@@ -5,14 +5,16 @@ import { useDoses } from  '../../../hooks/useDoses';
 import {LineChart} from "react-native-chart-kit";
 import {useMainStyles} from "../../../hooks/useMainStyles";
 
-const Last7DaysGraph = () => {
+const Last7DaysGraph = async () => {
   // Define the data for the timeline
-  const { doses } = useDoses();
+  const { doses, getDosesBetweenDates } = useDoses();
   const theme = useTheme()
   const styles = useMainStyles(theme);
   const currentDate = new Date();
+  const lastWeek = new Date();
+  lastWeek.setDate(currentDate.getDate() - 6);
   const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
+  const doseTotals = await getDosesBetweenDates(lastWeek, currentDate);
   const dayLabels = [];
   for (let i = -6; i <= 0; i++) {
     const dayDate = new Date();
@@ -28,7 +30,7 @@ const Last7DaysGraph = () => {
     labels: dayLabels,
     datasets: [
       {
-        data: [20, 45, 28, 80, 99, 43, 22],
+        data: doseTotals.map(dose => dose.total),
         strokeWidth: 2
       }
     ]
