@@ -1,7 +1,7 @@
 import {useEffect, useState} from 'react';
 import {Model, ModelConverter} from '../models/Model';
 import useFireauth, {FireauthType} from "./useFireauth";
-import {collection, query, where, onSnapshot, doc, setDoc} from "firebase/firestore";
+import {collection, query, where, onSnapshot, doc, setDoc, getDocs} from "firebase/firestore";
 import {useFirebase} from "../context/firebaseConfig";
 import {startOfDay, endOfDay} from 'date-fns';
 import {useDaily} from "../context/dailyProvider";
@@ -61,6 +61,36 @@ export const useDoses = (): DosesProviderType => {
         getDosesByDate(selectedDate);
     }, [user, db, selectedDate]);
 
+    const getDaysArray = (start, end) => {
+        let arr = [];
+        for (let dt = new Date(start); dt <= end; dt.setDate(dt.getDate() + 1)) {
+            arr.push(new Date(dt));
+        }
+        return arr;
+    };
+
+    const getDosesBetweenDates = async (startDate, endDate) => {
+        const datesArray = getDaysArray(startDate, endDate);
+        const dosesRef = collection(db, `doses-${user.uid}`).withConverter(dosesConverter);
+        let dosesDataByDate = [];
+
+        for (let i = 0; i < datesArray.length; i++) {
+            const date = datesArray[i];
+            const startOfDay1 = Timestamp.fromDate(startOfDay(date));
+            const endOfDay1 = Timestamp.fromDate(endOfDay(date));
+
+            const dosesQuery = query(dosesRef, where("date", ">=", startOfDay1), where("date", "<=", endOfDay1));
+
+            await getDocs(dosesQuery).then((querySnapshot) => {
+                let dosesData = [];
+                querySnapshot.forEach((doc) => {
+                    dosesData.push(doc.data());
+                });
+                dosesDataByDate.push({date: date, doses: dosesData});
+            });
+        }
+        return dosesDataByDate;
+    }
 
     const getDosesByDate = date => {
         const dosesRef = collection(db, `doses-${user.uid}`).withConverter(dosesConverter);
@@ -105,18 +135,18 @@ export const useDoses = (): DosesProviderType => {
     };
 
     useEffect(() => {
-            let total = 0;
-            doses.forEach(dose => {
-                const conversionFactor = doseUnitConversions[dose.doseUnit];
-                if (conversionFactor !== undefined) {
-                    total += dose.amount * conversionFactor;
-                } else {
-                    console.warn(`Unknown dose unit: ${dose.doseUnit}`);
-                }
-            });
+        let total = 0;
+        doses.forEach(dose => {
+            const conversionFactor = doseUnitConversions[dose.doseUnit];
+            if (conversionFactor !== undefined) {
+                total += dose.amount * conversionFactor;
+            } else {
+                console.warn(`Unknown dose unit: ${dose.doseUnit}`);
+            }
+        });
 
-            setTotalDoses(total / doseUnitConversions[commonUnit]);  // convert total to the common unit
-        }, [doses, doseUnitConversions, setTotalDoses, commonUnit]);
+        setTotalDoses(total / doseUnitConversions[commonUnit]);  // convert total to the common unit
+    }, [doses, doseUnitConversions, setTotalDoses, commonUnit]);
 
 
     return {doses, addDose, totalDoses, commonUnit, setCommonUnit};

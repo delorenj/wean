@@ -9,11 +9,23 @@ const Last7DaysGraph = () => {
   // Define the data for the timeline
   const { doses } = useDoses();
   const theme = useTheme()
-  const styles = useMainStyles(theme)
+  const styles = useMainStyles(theme);
+  const currentDate = new Date();
+  const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  const dayLabels = [];
+  for (let i = -6; i <= 0; i++) {
+    const dayDate = new Date();
+    dayDate.setDate(currentDate.getDate() + i);
+    const dayName = daysOfWeek[dayDate.getDay()];
+    const dayDay = dayDate.getDate();
+
+    dayLabels.push(dayName + '\n\r' + dayDay);
+  }
 
   // Mock data for the Line Chart
   const data = {
-    labels: ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"],
+    labels: dayLabels,
     datasets: [
       {
         data: [20, 45, 28, 80, 99, 43, 22],
