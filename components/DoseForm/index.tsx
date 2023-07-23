@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {View, Text, StyleSheet, Platform, ScrollView} from 'react-native';
+import {View, Text, StyleSheet, Platform, SafeAreaView} from 'react-native';
 import { RadioButton, Button } from 'react-native-paper';
 import Slider from '@react-native-community/slider';
 import { useNavigation } from '@react-navigation/native';
@@ -47,7 +47,7 @@ export const DoseForm = () => {
   };
 
   return (
-    <ScrollView style={[styles.container, { paddingBottom: insets.bottom + 200 }]}>
+    <SafeAreaView style={[styles.container, { paddingBottom: insets.bottom + 200 }]}>
       <View style={styles.radioContainer}>
         <RadioButton.Group onValueChange={(newValue) => setValue(newValue)} value={value}>
           <View style={styles.radio}>
@@ -82,13 +82,14 @@ export const DoseForm = () => {
       <Button mode="contained" onPress={handleAccept} style={styles.button}>
         Save
       </Button>
-    </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     padding: 20,
+    paddingBottom: 200,
     backgroundColor: 'black',
   },
   radioContainer: {
@@ -110,7 +111,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'center',
-    marginBottom: 200,
+    marginBottom: 100,
     paddingTop: 200,
   },
   slider: {

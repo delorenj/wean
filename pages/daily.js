@@ -4,20 +4,15 @@ import {useMainStyles} from "../hooks/useMainStyles";
 import {useFirebase} from "../context/firebaseConfig";
 import useFireauth from "../hooks/useFireauth";
 import {SafeAreaView} from "react-native-safe-area-context";
-import {DailyProvider} from "../context/dailyProvider";
 import TimelineList from "../components/DailyDoseTimeline";
-import Slider from '@react-native-community/slider';
 
 import {useState} from "react";
-import {DoseForm} from "../components/DoseForm";
 import {useNavigation} from "@react-navigation/native";
 
 export const DailyPage = () => {
     const theme = useTheme()
     const styles = useMainStyles(theme)
-    const {db} = useFirebase();
     const {user} = useFireauth();
-    const [fabState, setFabState] = useState({open: false});
     const [showForm, setShowForm] = useState(false);
     const navigation = useNavigation();
     // Function to handle the onPress event of the FAB
