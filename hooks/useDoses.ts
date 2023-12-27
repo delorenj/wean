@@ -76,9 +76,10 @@ export const useDoses = (): DosesProviderType => {
     };
 
     const getDosesBetweenDates = async (startDate, endDate) => {
+        if (!db || !user) return;
         const datesArray = getDaysArray(startDate, endDate);
         const dosesRef = collection(db, `doses-${user.uid}`).withConverter(dosesConverter);
-        let dosesDataByDate:DoseTotalByDate[] = [];
+        let dosesDataByDate: DoseTotalByDate[] = [];
 
         for (let i = 0; i < datesArray.length; i++) {
             const date = datesArray[i];
@@ -87,18 +88,30 @@ export const useDoses = (): DosesProviderType => {
 
             const dosesQuery = query(dosesRef, where("date", ">=", startOfDay1), where("date", "<=", endOfDay1));
 
-            await getDocs(dosesQuery).then((querySnapshot) => {
-                let dosesData = [];
-                querySnapshot.forEach((doc) => {
-                    dosesData.push(doc.data());
+            await getDocs(dosesQuery)
+                .then((querySnapshot) => {
+                    let dosesData = [];
+                    querySnapshot.forEach((doc) => {
+                        dosesData.push(doc.data());
+                    });
+                    dosesDataByDate.push({
+                        date: date,
+                        total: dosesData.map(dose => dose.amount).reduce((a, b) => a + b, 0)
+                    });
+                })
+                .catch((error) => {
+                    console.error("Error fetching doses: ", error);
+                    // Handle the error according to your application's needs
+                    // For example, you might want to set an error state,
+                    // show an error message to the user, etc.
                 });
-                dosesDataByDate.push({date: date, total: dosesData.map(dose => dose.amount).reduce((a, b) => a + b, 0)});
-            });
+
         }
         return dosesDataByDate;
     }
 
     const getDosesByDate = date => {
+        if (!db || !user) return;
         const dosesRef = collection(db, `doses-${user.uid}`).withConverter(dosesConverter);
         console.log('DosesRef:', dosesRef);   // log DosesRef
 
@@ -141,6 +154,8 @@ export const useDoses = (): DosesProviderType => {
     };
 
     useEffect(() => {
+        if (!doses || !doseUnitConversions || !setTotalDoses || !commonUnit) return;
+
         let total = 0;
         doses.forEach(dose => {
             const conversionFactor = doseUnitConversions[dose.doseUnit];

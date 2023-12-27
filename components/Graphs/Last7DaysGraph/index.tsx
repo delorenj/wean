@@ -26,6 +26,7 @@ const Last7DaysGraph = () => {
     }, [doses]);
 
     useEffect(() => {
+        if(!doseTotals) return;
         console.log('doseTotals', doseTotals);
     }, [doseTotals]);
 
@@ -48,7 +49,7 @@ const Last7DaysGraph = () => {
         labels: dayLabels,
         datasets: [
             {
-                data: doseTotals.length > 0 ? doseTotals.map(dose => dose.total) : [0,0,0,0,0,0,0],
+                data: (doseTotals && doseTotals.length) > 0 ? doseTotals.map(dose => dose.total) : [0,0,0,0,0,0,0],
                 strokeWidth: 2
             }
         ]

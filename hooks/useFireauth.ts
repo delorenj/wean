@@ -10,7 +10,7 @@ export interface FireauthType {
 }
 
 const useFireauth = (): FireauthType => {
-  const [user, setUser] = useState<User>();
+  const [user, setUser] = useState<User>(null);
   const auth = getAuth();
 
   useEffect(() => {
