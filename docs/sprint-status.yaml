@@ -1,0 +1,263 @@
+version: "6.0.0"
+project_name: "Wean"
+project_level: 2
+current_sprint: 1
+sprint_plan_path: "docs/sprint-plan-wean-2026-01-25.md"
+last_updated: "2026-01-26T06:30:00Z"
+
+sprints:
+  - sprint_number: 1
+    start_date: "2026-01-27"  # Monday Week 1
+    end_date: "2026-02-07"    # Friday Week 2
+    capacity_points: 30
+    committed_points: 29
+    completed_points: 5
+    status: "in_progress"
+    goal: "Establish development environment, implement anonymous auth, and deliver core dose tracking functionality"
+    stories:
+      - story_id: "STORY-INF-001"
+        title: "Development Environment Setup"
+        points: 5
+        status: "completed"
+        assigned_to: "Claude Code"
+        epic: "Infrastructure"
+        priority: "Must Have"
+        completed_date: "2026-01-26"
+        notes: |
+          ✓ Upgraded to Expo SDK 52 and React Native 0.76
+          ✓ Configured Firestore collections and indexes
+          ✓ Created production-ready Firestore security rules
+          ✓ Set up environment variables (.env files for dev/staging/prod)
+          ✓ Updated .gitignore for environment files
+          ✓ Configured GitHub Actions CI/CD pipeline
+          ✓ Created comprehensive README.md with setup instructions
+
+          Manual steps required:
+          - Install Firebase CLI globally: npm install -g firebase-tools
+          - Deploy Firestore rules: firebase deploy --only firestore
+          - Create Firebase projects for dev/staging
+          - Fill in Firebase credentials in .env files
+          - Create RevenueCat account and configure products
+          - Add GitHub secrets: EXPO_TOKEN, CODECOV_TOKEN
+
+      - story_id: "STORY-INF-002"
+        title: "CI/CD Pipeline"
+        points: 3
+        status: "not_started"
+        assigned_to: null
+        epic: "Infrastructure"
+        priority: "Must Have"
+
+      - story_id: "STORY-011"
+        title: "Anonymous Authentication"
+        points: 3
+        status: "not_started"
+        assigned_to: null
+        epic: "User Foundation"
+        priority: "Must Have"
+
+      - story_id: "STORY-001"
+        title: "Quick Dose Logging"
+        points: 5
+        status: "not_started"
+        assigned_to: null
+        epic: "Core Tracking"
+        priority: "Must Have"
+
+      - story_id: "STORY-002"
+        title: "Daily Dose Timeline"
+        points: 5
+        status: "not_started"
+        assigned_to: null
+        epic: "Core Tracking"
+        priority: "Must Have"
+
+      - story_id: "STORY-003"
+        title: "Rolling Calendar Week"
+        points: 5
+        status: "not_started"
+        assigned_to: null
+        epic: "Core Tracking"
+        priority: "Must Have"
+
+      - story_id: "STORY-004"
+        title: "Edit Dose"
+        points: 3
+        status: "not_started"
+        assigned_to: null
+        epic: "Core Tracking"
+        priority: "Must Have"
+
+  - sprint_number: 2
+    start_date: "2026-02-10"  # Monday Week 3
+    end_date: "2026-02-21"    # Friday Week 4
+    capacity_points: 30
+    committed_points: 39
+    completed_points: 0
+    status: "not_started"
+    goal: "Complete core tracking with offline sync, implement visual progress indicators, and deliver polished onboarding"
+    stories:
+      - story_id: "STORY-005"
+        title: "Delete Dose"
+        points: 2
+        status: "not_started"
+        assigned_to: null
+        epic: "Core Tracking"
+        priority: "Must Have"
+
+      - story_id: "STORY-006"
+        title: "Offline Dose Sync"
+        points: 11
+        status: "not_started"
+        assigned_to: null
+        epic: "Core Tracking"
+        priority: "Must Have"
+
+      - story_id: "STORY-007"
+        title: "Daily Dose Gauge"
+        points: 8
+        status: "not_started"
+        assigned_to: null
+        epic: "Visual Progress"
+        priority: "Must Have"
+
+      - story_id: "STORY-010"
+        title: "Settings Screen"
+        points: 5
+        status: "not_started"
+        assigned_to: null
+        epic: "User Foundation"
+        priority: "Must Have"
+
+      - story_id: "STORY-008"
+        title: "Dark/Light Theme Toggle"
+        points: 5
+        status: "not_started"
+        assigned_to: null
+        epic: "Visual Progress"
+        priority: "Must Have"
+
+      - story_id: "STORY-012"
+        title: "Onboarding Flow"
+        points: 8
+        status: "not_started"
+        assigned_to: null
+        epic: "User Foundation"
+        priority: "Must Have"
+
+      - story_id: "STORY-009"
+        title: "Kratie Mascot Onboarding"
+        points: 2
+        status: "deferred"
+        assigned_to: null
+        epic: "Visual Progress"
+        priority: "Should Have"
+        notes: "Deferred to Sprint 3 due to capacity. Depends on Kratie 3D asset delivery."
+
+  - sprint_number: 3
+    start_date: "2026-02-24"  # Monday Week 5
+    end_date: "2026-03-07"    # Friday Week 6
+    capacity_points: 30
+    committed_points: 47
+    completed_points: 0
+    status: "not_started"
+    goal: "Deliver premium features (paywall, taper planner, analytics, goals) and prepare for MVP launch"
+    stories:
+      - story_id: "STORY-014"
+        title: "Freemium Paywall"
+        points: 8
+        status: "not_started"
+        assigned_to: null
+        epic: "Premium Features"
+        priority: "Must Have"
+
+      - story_id: "STORY-015"
+        title: "Smart Taper Planner"
+        points: 8
+        status: "not_started"
+        assigned_to: null
+        epic: "Premium Features"
+        priority: "Should Have"
+
+      - story_id: "STORY-016"
+        title: "Weekly/Monthly Trend Analytics"
+        points: 8
+        status: "not_started"
+        assigned_to: null
+        epic: "Premium Features"
+        priority: "Should Have"
+
+      - story_id: "STORY-017"
+        title: "Goal Setting & Milestones"
+        points: 5
+        status: "not_started"
+        assigned_to: null
+        epic: "Premium Features"
+        priority: "Should Have"
+
+      - story_id: "STORY-018"
+        title: "Dose Reminders & Alerts"
+        points: 5
+        status: "not_started"
+        assigned_to: null
+        epic: "Premium Features"
+        priority: "Should Have"
+
+      - story_id: "STORY-019"
+        title: "Export & Backup"
+        points: 5
+        status: "not_started"
+        assigned_to: null
+        epic: "Premium Features"
+        priority: "Should Have"
+
+      - story_id: "STORY-013"
+        title: "Account Deletion"
+        points: 3
+        status: "not_started"
+        assigned_to: null
+        epic: "User Foundation"
+        priority: "Must Have"
+
+      - story_id: "STORY-020"
+        title: "Kratie Milestone Celebrations"
+        points: 3
+        status: "not_started"
+        assigned_to: null
+        epic: "Premium Features"
+        priority: "Should Have"
+
+      - story_id: "STORY-009"
+        title: "Kratie Mascot Onboarding"
+        points: 2
+        status: "not_started"
+        assigned_to: null
+        epic: "Visual Progress"
+        priority: "Should Have"
+        notes: "Carryover from Sprint 2."
+
+velocity:
+  sprint_1: null  # Will be filled when sprint completes
+  sprint_2: null
+  sprint_3: null
+  rolling_average: null
+
+team:
+  size: 1
+  sprint_length_weeks: 2
+  capacity_per_sprint: 30
+  experience_level: "senior"
+  productive_hours_per_day: 6
+
+notes: |
+  Sprint 2 and Sprint 3 are over-capacity (39 and 47 points vs. 30 capacity).
+  Prioritize Must Have stories. Should Have stories are stretch goals.
+
+  Sprint 2: Focus on STORY-005, 006, 007, 010, 008, 012 (core features).
+  Defer STORY-009 (Kratie Onboarding) if time runs short.
+
+  Sprint 3: Prioritize STORY-014 (Paywall) and STORY-015 (Taper Planner) as core premium features.
+  STORY-016 through STORY-020 are stretch goals. Consider extending to Sprint 4 if needed.
+
+  Kratie 3D asset delivery is critical for STORY-009 and STORY-020.
+  Coordinate with design team to ensure delivery by Sprint 2 start (2026-02-10).

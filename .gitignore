@@ -75,4 +75,14 @@ dist/
 
 wean-17739-firebase-adminsdk-*
 
+# Environment variables
+.env
+.env.local
+.env.development
+.env.staging
+.env.production
+
 # @end expo-cli
+.plane.env
+.plane.json
+.gemini

@@ -1,0 +1,20 @@
+# BMAD Method v6 - Project Configuration
+# Project: Wean
+
+project_name: "Wean"
+project_type: "mobile-app"
+project_level: 2  # Medium (5-15 stories)
+
+# Output folder (relative to project root)
+output_folder: "docs"
+
+# Module-specific settings
+bmm:
+  workflow_status_file: "docs/bmm-workflow-status.yaml"
+  sprint_status_file: "docs/sprint-status.yaml"
+
+# Path configuration
+paths:
+  docs: "docs"
+  stories: "docs/stories"
+  tests: "tests"
