@@ -8,65 +8,37 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Helper function to check if user owns the resource
-    function isOwner(uid) {
-      return isAuthenticated() && request.auth.uid == uid;
+    // Dynamic collection pattern: doses-{uid}
+    // Uses recursive wildcard to match any collection, then validates name
+    match /{collectionName}/{docId} {
+      // Allow access to doses-{uid} collections where uid matches auth user
+      allow read, write: if isAuthenticated()
+        && collectionName.matches('doses-.*')
+        && collectionName == 'doses-' + request.auth.uid;
     }
 
-    // Dose collections (per-user): doses-{uid}
-    match /doses-{uid}/{doseId} {
-      // Users can only read/write their own doses
-      allow read, write: if isOwner(uid);
-
-      // Validate dose data structure on write
-      allow create, update: if isOwner(uid)
-        && request.resource.data.substance is string
-        && request.resource.data.amount is number
-        && request.resource.data.amount >= 0
-        && request.resource.data.doseUnit is string
-        && request.resource.data.doseUnit in ['g', 'gram', 'oz', 'ounce']
-        && request.resource.data.date is timestamp;
-    }
-
-    // Settings collection: per-user settings document
+    // Settings collection: per-user settings document keyed by UID
     match /settings/{uid} {
-      // Users can only read/write their own settings
-      allow read, write: if isOwner(uid);
-
-      // Validate settings data structure
-      allow create, update: if isOwner(uid)
-        && request.resource.data.dailyTarget is number
-        && request.resource.data.dailyTarget >= 0
-        && request.resource.data.doseUnit is string
-        && request.resource.data.doseUnit in ['g', 'gram', 'oz', 'ounce'];
+      allow read, write: if isAuthenticated() && request.auth.uid == uid;
     }
 
     // User profiles collection (for premium features)
     match /users/{uid} {
-      // Users can only read/write their own profile
-      allow read, write: if isOwner(uid);
-
-      // Validate user profile structure
-      allow create, update: if isOwner(uid)
-        && request.resource.data.email is string
-        && request.resource.data.createdAt is timestamp;
+      allow read, write: if isAuthenticated() && request.auth.uid == uid;
     }
 
     // Taper plans collection (premium feature)
-    match /taper-plans-{uid}/{planId} {
-      // Users can only read/write their own taper plans
-      allow read, write: if isOwner(uid);
+    match /{collectionName}/{docId} {
+      allow read, write: if isAuthenticated()
+        && collectionName.matches('taper-plans-.*')
+        && collectionName == 'taper-plans-' + request.auth.uid;
     }
 
     // Goals collection (premium feature)
-    match /goals-{uid}/{goalId} {
-      // Users can only read/write their own goals
-      allow read, write: if isOwner(uid);
-    }
-
-    // Deny all other access
-    match /{document=**} {
-      allow read, write: if false;
+    match /{collectionName}/{docId} {
+      allow read, write: if isAuthenticated()
+        && collectionName.matches('goals-.*')
+        && collectionName == 'goals-' + request.auth.uid;
     }
   }
 }

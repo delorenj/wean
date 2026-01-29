@@ -33,7 +33,10 @@
     },
     "jsEngine": "hermes",
     "extra": {
-      "debuggerWorker.forceLocal": true
+      "debuggerWorker.forceLocal": true,
+      "eas": {
+        "projectId": "86590188-803b-4214-b15c-fca910b2cf66"
+      }
     }
   }
 }
