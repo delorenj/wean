@@ -11,7 +11,7 @@ import {
 
 import merge from 'deepmerge';
 import useSettings from "./hooks/useSettings";
-import {Tabs} from "./components/tabs";
+import {OnboardingGate} from "./components/OnboardingGate";
 import {useEffect, useState} from "react";
 import {Provider as PaperProvider, adaptNavigationTheme} from 'react-native-paper';
 
@@ -34,7 +34,7 @@ export const ThemedApp = () => {
     return (
         <PaperProvider theme={theme}>
             <NavigationContainer theme={theme}>
-              <Tabs/>
+              <OnboardingGate/>
             </NavigationContainer>
           </PaperProvider>
     )
