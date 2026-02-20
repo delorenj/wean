@@ -1,24 +1,25 @@
 import { ScrollView, StyleSheet, View } from "react-native";
-import { Card, Text, useTheme, Divider, List } from "react-native-paper";
+import { Card, Text, useTheme, Divider, List, ActivityIndicator } from "react-native-paper";
 import { useMainStyles } from "../hooks/useMainStyles";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { generateLinearTaperSchedule, TaperSchedule } from "../utils/taperCalculator";
 import { useMemo } from "react";
+import { useTaperSettings } from "../hooks/useTaperSettings";
 
 export const PlanPage = () => {
   const theme = useTheme();
   const mainStyles = useMainStyles(theme);
+  const { settings: taperSettings, isLoading } = useTaperSettings();
 
-  // Generate a sample taper schedule
-  // TODO: Replace with user inputs from settings/onboarding
+  // Generate taper schedule from user settings
   const taperSchedule: TaperSchedule = useMemo(() => {
     return generateLinearTaperSchedule({
-      currentDailyDose: 20,
-      targetDose: 0,
-      timelineDays: 30,
-      unit: 'g'
+      currentDailyDose: taperSettings.startDose,
+      targetDose: taperSettings.targetDose,
+      timelineDays: taperSettings.durationDays,
+      unit: taperSettings.unit
     });
-  }, []);
+  }, [taperSettings]);
 
   const styles = StyleSheet.create({
     container: {
@@ -77,13 +78,22 @@ export const PlanPage = () => {
     },
   });
 
+  if (isLoading) {
+    return (
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+        <Text style={{ marginTop: 16 }}>Loading your taper plan...</Text>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Your Taper Plan</Text>
           <Text style={styles.subtitle}>
-            30-day personalized reduction schedule
+            {taperSettings.durationDays}-day personalized reduction schedule
           </Text>
         </View>
 
@@ -95,15 +105,15 @@ export const PlanPage = () => {
             </Text>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Starting Dose:</Text>
-              <Text style={styles.summaryValue}>20 {taperSchedule.unit}</Text>
+              <Text style={styles.summaryValue}>{taperSettings.startDose} {taperSchedule.unit}</Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Target Dose:</Text>
-              <Text style={styles.summaryValue}>0 {taperSchedule.unit}</Text>
+              <Text style={styles.summaryValue}>{taperSettings.targetDose} {taperSchedule.unit}</Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Duration:</Text>
-              <Text style={styles.summaryValue}>30 days</Text>
+              <Text style={styles.summaryValue}>{taperSettings.durationDays} days</Text>
             </View>
             <Divider style={{ marginVertical: 8 }} />
             <View style={styles.summaryRow}>
@@ -155,8 +165,7 @@ export const PlanPage = () => {
 
         <View style={{ marginBottom: 32 }}>
           <Text style={{ textAlign: 'center', opacity: 0.5, fontSize: 12 }}>
-            💡 This is a preview with sample data.
-            {'\n'}Configure your plan in Settings.
+            💡 Adjust your taper plan in Settings
           </Text>
         </View>
       </ScrollView>
