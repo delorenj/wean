@@ -1,16 +1,44 @@
+rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      // This rule allows anyone with your database reference to view, edit,
-      // and delete all data in your database. It is useful for getting
-      // started, but it is configured to expire after 30 days because it
-      // leaves your app open to attackers. At that time, all client
-      // requests to your database will be denied.
-      //
-      // Make sure to write security rules for your app before that time, or
-      // else all client requests to your database will be denied until you
-      // update your rules.
-      allow read, write: if request.time < timestamp.date(2023, 1, 21);
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Dynamic collection pattern: doses-{uid}
+    // Uses recursive wildcard to match any collection, then validates name
+    match /{collectionName}/{docId} {
+      // Allow access to doses-{uid} collections where uid matches auth user
+      allow read, write: if isAuthenticated()
+        && collectionName.matches('doses-.*')
+        && collectionName == 'doses-' + request.auth.uid;
+    }
+
+    // Settings collection: per-user settings document keyed by UID
+    match /settings/{uid} {
+      allow read, write: if isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // User profiles collection (for premium features)
+    match /users/{uid} {
+      allow read, write: if isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // Taper plans collection (premium feature)
+    match /{collectionName}/{docId} {
+      allow read, write: if isAuthenticated()
+        && collectionName.matches('taper-plans-.*')
+        && collectionName == 'taper-plans-' + request.auth.uid;
+    }
+
+    // Goals collection (premium feature)
+    match /{collectionName}/{docId} {
+      allow read, write: if isAuthenticated()
+        && collectionName.matches('goals-.*')
+        && collectionName == 'goals-' + request.auth.uid;
     }
   }
 }
