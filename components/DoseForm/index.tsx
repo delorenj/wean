@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { RadioButton, Button } from 'react-native-paper';
 import Slider from '@react-native-community/slider';
@@ -12,6 +12,11 @@ export const DoseForm = () => {
   const navigation = useNavigation();
   const [dosage, setDosage] = useState(0);
   const [value, setValue] = useState('gram');
+
+  const quickPresets = useMemo(() => {
+    if (value === 'ounce') return [0.25, 0.5, 0.75, 1.0];
+    return [0.5, 1.0, 1.5, 2.0, 3.0];
+  }, [value]);
 
   useEffect(() => {
     if (!navigation) return;
@@ -50,6 +55,23 @@ export const DoseForm = () => {
       <View style={styles.dosageText}>
         <Text style={styles.dosageText}>{dosage.toFixed(1)}</Text>
       </View>
+
+      <View style={styles.quickEntryRow}>
+        {quickPresets.map((preset) => (
+          <Button
+            key={`${value}-${preset}`}
+            mode={dosage === preset ? 'contained' : 'outlined'}
+            compact
+            onPress={() => setDosage(preset)}
+            style={styles.quickEntryButton}
+            buttonColor={dosage === preset ? '#8E44AD' : undefined}
+            textColor="white"
+          >
+            {`${preset}${value === 'gram' ? 'g' : 'oz'}`}
+          </Button>
+        ))}
+      </View>
+
       <View style={styles.sliderContainer}>
         <Slider
           style={styles.slider}
@@ -63,8 +85,14 @@ export const DoseForm = () => {
           value={dosage}
         />
       </View>
-      <Button mode="contained" onPress={handleAccept} style={styles.button}>
-        Accept
+      <Button
+        testID="quick-dose-save-button"
+        mode="contained"
+        onPress={handleAccept}
+        style={styles.button}
+        disabled={dosage <= 0}
+      >
+        Save Dose
       </Button>
     </View>
   );
@@ -90,12 +118,24 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     fontSize: 24,
   },
+  quickEntryRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  quickEntryButton: {
+    marginHorizontal: 4,
+    marginVertical: 4,
+    borderColor: '#8E44AD',
+  },
   sliderContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'center',
-    marginBottom: 200,
-    paddingTop: 200,
+    marginBottom: 80,
+    paddingTop: 48,
   },
   slider: {
     flex: 1,
