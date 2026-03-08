@@ -31,14 +31,15 @@ export const GoalsPage = () => {
 
   const {
     goal,
+    goalHistory,
     isLoading,
     error,
     currentDose,
     progressPercentage,
-    milestoneStates,
     celebrationMilestone,
     saveGoal,
-    clearGoal,
+    abandonGoal,
+    completeGoal,
     dismissCelebration,
   } = useGoals(premiumAccess.isPremiumUnlocked);
 
@@ -119,13 +120,14 @@ export const GoalsPage = () => {
         <ScreenTransition delay={90}>
           <GoalSetting
             goal={goal}
+            goalHistory={goalHistory}
             currentDose={currentDose}
             progressPercentage={progressPercentage}
-            milestoneStates={milestoneStates}
             celebrationMilestone={celebrationMilestone}
             errorMessage={error}
             onSave={saveGoal}
-            onClear={clearGoal}
+            onAbandon={abandonGoal}
+            onComplete={completeGoal}
             onDismissCelebration={dismissCelebration}
           />
         </ScreenTransition>
