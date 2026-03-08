@@ -5,42 +5,14 @@
  */
 
 import { useTheme } from 'react-native-paper';
-import * as Tokens from '../src/tokens';
+import { resolveDesignTokens } from './useDesignTokens.helpers';
 
 export const useDesignTokens = () => {
   const theme = useTheme();
-  
-  // Determine if dark mode
-  const isDark = theme.dark;
-  
-  // Return theme-aware tokens
+  const resolvedTokens = resolveDesignTokens(theme.dark);
+
   return {
-    // Colors
-    colors: isDark ? Tokens.DarkColors : Tokens.Colors,
-    
-    // Typography
-    typography: Tokens.Typography,
-    
-    // Spacing
-    spacing: Tokens.Spacing,
-    
-    // Borders
-    borderRadius: Tokens.BorderRadius,
-    
-    // Shadows
-    shadows: Tokens.Shadows,
-    
-    // Component States
-    componentStates: Tokens.ComponentStates,
-    
-    // Safe Area
-    safeArea: Tokens.SafeAreaInsets,
-    
-    // Animation
-    animation: Tokens.Animation,
-    
-    // Theme context (for convenience)
-    isDark,
+    ...resolvedTokens,
     theme,
   };
 };

@@ -12,8 +12,12 @@ import {
   useTheme,
 } from 'react-native-paper';
 import Constants from 'expo-constants';
-import useSettings from '../hooks/useSettings';
-import { DoseUnitPreference, SortOrderPreference } from '../hooks/useSettings.helpers';
+import { useAppTheme } from '../context/themeProvider';
+import {
+  DoseUnitPreference,
+  SortOrderPreference,
+  ThemePreference,
+} from '../hooks/useSettings.helpers';
 import useDesignTokens from '../hooks/useDesignTokens';
 
 const PRIVACY_POLICY_URL = 'https://wean.app/privacy';
@@ -24,11 +28,11 @@ export const SettingsPage = () => {
   const { colors, spacing, typography } = useDesignTokens();
   const {
     settings,
-    toggleDarkMode,
+    setThemePreference,
     setDefaultDoseUnit,
     setSortOrder,
     setNotificationsEnabled,
-  } = useSettings();
+  } = useAppTheme();
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -68,6 +72,10 @@ export const SettingsPage = () => {
     },
   });
 
+  const handleThemeChange = (value: string) => {
+    void setThemePreference(value as ThemePreference);
+  };
+
   const handleDoseUnitChange = (value: string) => {
     void setDefaultDoseUnit(value as DoseUnitPreference);
   };
@@ -92,19 +100,17 @@ export const SettingsPage = () => {
         <Text style={styles.title}>Settings</Text>
 
         <List.Section title="App Preferences">
-          <List.Item
-            title="Dark Theme"
-            description="Use dark colors across the app"
-            left={(props) => <List.Icon {...props} icon="theme-light-dark" />}
-            right={() => (
-              <Switch
-                value={settings.darkMode}
-                onValueChange={() => {
-                  void toggleDarkMode();
-                }}
-              />
-            )}
-          />
+          <View style={styles.segmentedWrapper}>
+            <Text style={styles.segmentedLabel}>Theme</Text>
+            <SegmentedButtons
+              value={settings.theme}
+              onValueChange={handleThemeChange}
+              buttons={[
+                { value: 'light', label: 'Light' },
+                { value: 'dark', label: 'Dark' },
+              ]}
+            />
+          </View>
 
           <View style={styles.segmentedWrapper}>
             <Text style={styles.segmentedLabel}>Default Dose Unit</Text>
