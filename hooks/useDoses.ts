@@ -9,12 +9,14 @@ import {
   doc,
   setDoc,
   updateDoc,
+  deleteDoc,
   Timestamp,
   Unsubscribe,
 } from 'firebase/firestore';
 import { useFirebase } from '../context/firebaseConfig';
 import { startOfDay, endOfDay } from 'date-fns';
 import { useDaily } from '../context/dailyProvider';
+import { applyOptimisticDoseDelete, rollbackOptimisticDoseDelete } from './useDoses.helpers';
 
 export interface Dose extends Model {
   id?: string;
@@ -32,6 +34,7 @@ export interface DosesProviderType {
   doses: Dose[];
   addDose: (dose: Dose) => Promise<void>;
   updateDose: (doseId: string, updates: Partial<Dose>) => Promise<void>;
+  deleteDose: (doseId: string) => Promise<void>;
   totalDoses: number;
   setCommonUnit: (unit: string) => void;
   commonUnit: string;
@@ -187,6 +190,30 @@ export const useDoses = (): DosesProviderType => {
     await updateDoc(ref, payload);
   };
 
+  const deleteDose = async (doseId: string): Promise<void> => {
+    if (!user || !db || !doseId) return;
+
+    const snapshotBeforeDelete = doses;
+    const optimisticResult = applyOptimisticDoseDelete(snapshotBeforeDelete, doseId);
+
+    setDoses(optimisticResult.nextDoses);
+
+    if (!optimisticResult.removedDose) {
+      return;
+    }
+
+    const ref = doc(db, `doses-${user.uid}`, doseId);
+
+    try {
+      await deleteDoc(ref);
+    } catch (error) {
+      console.log(`There was an error deleting dose=${doseId} for userId=${user.uid}`, error);
+      setDoses((current) =>
+        rollbackOptimisticDoseDelete(current, optimisticResult.removedDose, optimisticResult.removedDoseIndex)
+      );
+    }
+  };
+
   useEffect(() => {
     let total = 0;
 
@@ -204,5 +231,5 @@ export const useDoses = (): DosesProviderType => {
     setTotalDoses(total / targetConversion);
   }, [doses, commonUnit]);
 
-  return { doses, addDose, updateDose, totalDoses, commonUnit, setCommonUnit };
+  return { doses, addDose, updateDose, deleteDose, totalDoses, commonUnit, setCommonUnit };
 };
