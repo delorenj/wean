@@ -52,7 +52,7 @@ export const Tabs = () => {
         ),
       }}/>
       <Tab.Screen name="Settings" component={SettingsPage} options={{
-        tabBarLabel: 'Setting',
+        tabBarLabel: 'Settings',
         tabBarLabelStyle: {fontSize: 8},
         tabBarIcon: ({ color }) => (
           <MaterialCommunityIcons name="cog" color={color} size={26} />
