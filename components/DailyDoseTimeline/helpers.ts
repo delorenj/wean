@@ -6,11 +6,13 @@ export interface TimelineDateLike {
 
 export interface DailyDoseTimelineEntry {
   key: string;
+  doseId: string | undefined;
   timestamp: Date;
   timeLabel: string;
   amount: number;
   unit: string;
   substance: string;
+  isEdited: boolean;
 }
 
 export interface FormatTimelineTimeOptions {
@@ -62,6 +64,25 @@ const resolveUnit = (unit: string | undefined, fallbackUnit = 'g'): string => {
 
 export const parseDoseTimestamp = (value: unknown): Date | null => parseDate(value);
 
+export const isDoseEdited = (
+  createdAt: unknown,
+  updatedAt: unknown
+): boolean => {
+  const updatedAtDate = parseDate(updatedAt);
+
+  if (!updatedAtDate) {
+    return false;
+  }
+
+  const createdAtDate = parseDate(createdAt);
+
+  if (!createdAtDate) {
+    return true;
+  }
+
+  return updatedAtDate.getTime() > createdAtDate.getTime();
+};
+
 export const formatTimelineTime = (
   value: Date,
   options: FormatTimelineTimeOptions = {}
@@ -109,12 +130,14 @@ export const buildDailyDoseTimelineEntries = (
       const unit = resolveUnit(dose.doseUnit, fallbackUnit);
 
       return {
-        key: `${timestamp.getTime()}-${index}`,
+        key: dose.id || `${timestamp.getTime()}-${index}`,
+        doseId: dose.id,
         timestamp,
         timeLabel: formatTimelineTime(timestamp, { locale, timeZone }),
         amount,
         unit,
         substance: dose.substance,
+        isEdited: isDoseEdited(dose.createdAt, dose.updatedAt),
       } satisfies DailyDoseTimelineEntry;
     })
     .filter((entry): entry is DailyDoseTimelineEntry => entry !== null);
