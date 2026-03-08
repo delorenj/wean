@@ -273,7 +273,7 @@ export const ComponentStates = {
     },
     error: {
       borderColor: Colors.error,
-      backgroundColor: Colors.error + '08', // 8% opacity
+      backgroundColor: Colors.error + '14', // 8% opacity
     },
     disabled: {
       backgroundColor: Colors.neutral[100],
@@ -298,7 +298,7 @@ export const ComponentStates = {
       ...Shadows.z2,
     },
     error: {
-      backgroundColor: Colors.error + '08',
+      backgroundColor: Colors.error + '14',
       borderColor: Colors.error,
     },
   },
