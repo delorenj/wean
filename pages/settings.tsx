@@ -19,6 +19,8 @@ import {
   ThemePreference,
 } from '../hooks/useSettings.helpers';
 import useDesignTokens from '../hooks/useDesignTokens';
+import useSyncStatus from '../hooks/useSyncStatus';
+import SyncStatusIndicator from '../components/SyncStatusIndicator';
 
 const PRIVACY_POLICY_URL = 'https://wean.app/privacy';
 const TERMS_OF_SERVICE_URL = 'https://wean.app/terms';
@@ -33,6 +35,7 @@ export const SettingsPage = () => {
     setSortOrder,
     setNotificationsEnabled,
   } = useAppTheme();
+  const { status, lastSyncLabel, syncNow } = useSyncStatus();
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -98,6 +101,12 @@ export const SettingsPage = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>Settings</Text>
+
+        <List.Section title="Data Sync">
+          <SyncStatusIndicator status={status} lastSyncLabel={lastSyncLabel} onSyncNow={syncNow} />
+        </List.Section>
+
+        <Divider />
 
         <List.Section title="App Preferences">
           <View style={styles.segmentedWrapper}>
