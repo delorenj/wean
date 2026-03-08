@@ -1,7 +1,7 @@
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import DailyPage from '../pages/daily';
 import DosePage from '../pages/dose';
-import InsightsPage from '../pages/insights';
+import AnalyticsPage from '../pages/analytics';
 import PlanPage from '../pages/plan';
 import SettingsPage from '../pages/settings';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -65,11 +65,11 @@ export const Tabs = ({ initialRouteName = TABS_INITIAL_ROUTES.DAILY }) => {
           <MaterialCommunityIcons name="bottle-tonic-skull" color={color} size={26} />
         ),
       }} />
-      <Tab.Screen name="Insight" component={InsightsPage} options={{
-        tabBarLabel: 'Insight',
+      <Tab.Screen name="Analytics" component={AnalyticsPage} options={{
+        tabBarLabel: 'Analytics',
         tabBarLabelStyle: { fontSize: 8 },
         tabBarIcon: ({ color }) => (
-          <MaterialCommunityIcons name="alarm-light" color={color} size={26} />
+          <MaterialCommunityIcons name="chart-line" color={color} size={26} />
         ),
       }} />
       <Tab.Screen name="Plan" component={PlanPage} options={{
