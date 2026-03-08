@@ -3,7 +3,8 @@ import {StyleSheet, FlatList, View} from 'react-native';
 import { Title, Paragraph } from 'react-native-paper';
 import {DailyDoseGauge} from "../DailyDoseGauge";
 import {Index as RollingCalendarWeek} from "../../components/RollingCalendarWeek";
-import { useDoses } from  '../../hooks/useDoses';
+import { useDoses } from '../../hooks/useDoses';
+import { useTaperSettings } from '../../hooks/useTaperSettings';
 import useDesignTokens from '../../hooks/useDesignTokens';
 
 // Custom TimelineItem component
@@ -23,30 +24,42 @@ const TimelineItem = ({ title, description, time, tokens }) => (
 
 );
 
-const ListHeader = () => (
+interface ListHeaderProps {
+  currentDose: number;
+  targetDose: number;
+  unit: string;
+}
+
+const ListHeader: React.FC<ListHeaderProps> = ({ currentDose, targetDose, unit }) => (
   <View>
     <RollingCalendarWeek />
-    <DailyDoseGauge />
+    <DailyDoseGauge currentDose={currentDose} targetDose={targetDose} unit={unit} />
   </View>
 );
 
 // Vertical timeline list component
 const TimelineList = () => {
   const tokens = useDesignTokens();
+  const { settings } = useTaperSettings();
   // Define the data for the timeline
-  const { doses } = useDoses();
+  const { doses, totalDoses, commonUnit } = useDoses();
 
   return (
     // Wrap the FlatList with a ScrollView
-      <FlatList
-        data={doses}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
-          <TimelineItem title={item.substance} description={item.amount} time={item.doseUnit} tokens={tokens} />
-        )}
-        ListHeaderComponent={ListHeader}
-
-      />
+    <FlatList
+      data={doses}
+      keyExtractor={(item, index) => index.toString()}
+      renderItem={({ item }) => (
+        <TimelineItem title={item.substance} description={item.amount} time={item.doseUnit} tokens={tokens} />
+      )}
+      ListHeaderComponent={() => (
+        <ListHeader
+          currentDose={totalDoses}
+          targetDose={settings.targetDose}
+          unit={settings.unit || commonUnit}
+        />
+      )}
+    />
   );
 };
 
