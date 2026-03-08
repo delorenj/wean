@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
 import {
+  Alert,
   FlatList,
   ListRenderItem,
   Pressable,
-  StyleSheet,
   Text,
   TextStyle,
   View,
@@ -17,20 +17,13 @@ import useDesignTokens from '../../hooks/useDesignTokens';
 import {
   buildDailyDoseTimelineEntries,
   DailyDoseTimelineEntry,
-  formatTimelineDoseAmount,
 } from './helpers';
+import DoseCard from './DoseCard';
 
 export interface DailyDoseTimelineProps {
   onAddDosePress?: () => void;
   addDoseLabel?: string;
   testID?: string;
-}
-
-interface TimelineEntryItemProps {
-  entry: DailyDoseTimelineEntry;
-  isFirst: boolean;
-  isLast: boolean;
-  onPress: () => void;
 }
 
 interface TimelineListHeaderProps {
@@ -45,132 +38,6 @@ interface TimelineListHeaderProps {
 const toTextStyle = (
   typographyStyle: (typeof import('../../src/tokens').Typography)[keyof (typeof import('../../src/tokens').Typography)]
 ): TextStyle => typographyStyle as TextStyle;
-
-const TimelineEntryItem: React.FC<TimelineEntryItemProps> = ({ entry, isFirst, isLast, onPress }) => {
-  const tokens = useDesignTokens();
-
-  return (
-    <View
-      style={[
-        styles.timelineEntryRow,
-        {
-          paddingHorizontal: tokens.spacing[16],
-        },
-      ]}
-    >
-      <View
-        style={[
-          styles.timelineRail,
-          {
-            width: tokens.spacing[24],
-            marginRight: tokens.spacing[12],
-          },
-        ]}
-      >
-        <View
-          style={{
-            flex: 1,
-            minHeight: tokens.spacing[12],
-            width: tokens.spacing[2],
-            backgroundColor: tokens.colors.primary[200],
-            opacity: isFirst ? 0 : 1,
-          }}
-        />
-
-        <View
-          style={{
-            width: tokens.spacing[12],
-            height: tokens.spacing[12],
-            borderRadius: tokens.borderRadius.full,
-            backgroundColor: tokens.colors.primary[400],
-            borderWidth: tokens.spacing[2],
-            borderColor: tokens.colors.surface,
-          }}
-        />
-
-        <View
-          style={{
-            flex: 1,
-            minHeight: tokens.spacing[12],
-            width: tokens.spacing[2],
-            backgroundColor: tokens.colors.primary[200],
-            opacity: isLast ? 0 : 1,
-          }}
-        />
-      </View>
-
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`Edit ${entry.substance || 'dose'} logged at ${entry.timeLabel}`}
-        onPress={onPress}
-        style={[
-          styles.entryCard,
-          {
-            padding: tokens.spacing[12],
-            borderRadius: tokens.borderRadius.lg,
-            backgroundColor: tokens.componentStates.card.default.backgroundColor,
-            borderColor: tokens.componentStates.card.default.borderColor,
-            borderWidth: tokens.spacing[2],
-            gap: tokens.spacing[8],
-            ...tokens.shadows.z1,
-          },
-        ]}
-      >
-        <View style={styles.entryMetaRow}>
-          <Text
-            style={{
-              color: tokens.colors.onSurfaceVariant,
-              ...toTextStyle(tokens.typography.labelLarge),
-            }}
-          >
-            {entry.timeLabel}
-          </Text>
-
-          {entry.isEdited ? (
-            <Text
-              style={{
-                color: tokens.colors.primary[600],
-                ...toTextStyle(tokens.typography.labelMedium),
-              }}
-            >
-              Edited
-            </Text>
-          ) : null}
-        </View>
-
-        <View style={[styles.amountRow, { gap: tokens.spacing[6] }]}> 
-          <Text
-            style={{
-              color: tokens.colors.onSurface,
-              ...toTextStyle(tokens.typography.titleLarge),
-            }}
-          >
-            {formatTimelineDoseAmount(entry.amount)}
-          </Text>
-          <Text
-            style={{
-              color: tokens.colors.onSurfaceVariant,
-              ...toTextStyle(tokens.typography.titleMedium),
-            }}
-          >
-            {entry.unit}
-          </Text>
-        </View>
-
-        {entry.substance ? (
-          <Text
-            style={{
-              color: tokens.colors.onSurfaceVariant,
-              ...toTextStyle(tokens.typography.bodySmall),
-            }}
-          >
-            {entry.substance}
-          </Text>
-        ) : null}
-      </Pressable>
-    </View>
-  );
-};
 
 const TimelineListHeader: React.FC<TimelineListHeaderProps> = ({
   currentDose,
@@ -313,7 +180,7 @@ const DailyDoseTimeline: React.FC<DailyDoseTimelineProps> = ({
   testID,
 }) => {
   const { settings } = useTaperSettings();
-  const { doses, totalDoses, commonUnit } = useDoses();
+  const { doses, totalDoses, commonUnit, deleteDose } = useDoses();
   const tokens = useDesignTokens();
   const navigation = useNavigation<NavigationProp<Record<string, object | undefined>>>();
 
@@ -353,12 +220,40 @@ const DailyDoseTimeline: React.FC<DailyDoseTimelineProps> = ({
     navigation.navigate('Dose', { mode: 'edit', doseId: entry.doseId });
   };
 
+  const handleDeleteDosePress = (entry: DailyDoseTimelineEntry) => {
+    const doseId = entry.doseId;
+
+    if (!doseId) {
+      return;
+    }
+
+    Alert.alert(
+      'Delete this dose?',
+      undefined,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            void deleteDose(doseId);
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
   const renderTimelineEntry: ListRenderItem<DailyDoseTimelineEntry> = ({ item, index }) => (
-    <TimelineEntryItem
+    <DoseCard
       entry={item}
       isFirst={index === 0}
       isLast={index === timelineEntries.length - 1}
       onPress={() => handleEditDosePress(item)}
+      onDeletePress={() => handleDeleteDosePress(item)}
     />
   );
 
@@ -386,29 +281,5 @@ const DailyDoseTimeline: React.FC<DailyDoseTimelineProps> = ({
     />
   );
 };
-
-const styles = StyleSheet.create({
-  timelineEntryRow: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-  },
-  timelineRail: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  entryCard: {
-    flex: 1,
-  },
-  entryMetaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  amountRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-  },
-});
 
 export default DailyDoseTimeline;
