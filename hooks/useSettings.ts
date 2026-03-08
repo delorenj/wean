@@ -1,80 +1,109 @@
-import { useEffect, useState } from 'react';
-import {Model, ModelConverter} from '../models/Model';
-import useFireauth, {FireauthType} from "./useFireauth";
-import {onSnapshot, doc, setDoc} from "firebase/firestore";
-import {useFirebase} from "../context/firebaseConfig";
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import useFireauth from './useFireauth';
+import { useFirebase } from '../context/firebaseConfig';
+import {
+  DEFAULT_SETTINGS,
+  DoseUnitPreference,
+  mergeSettings,
+  normalizeSettings,
+  Settings,
+  SortOrderPreference,
+} from './useSettings.helpers';
 
 export interface SettingsProviderType {
-    settings: Settings,
-    toggleDarkMode
+  settings: Settings;
+  isLoading: boolean;
+  toggleDarkMode: () => Promise<void>;
+  setDefaultDoseUnit: (doseUnit: DoseUnitPreference) => Promise<void>;
+  setSortOrder: (sortOrder: SortOrderPreference) => Promise<void>;
+  setNotificationsEnabled: (enabled: boolean) => Promise<void>;
+  updateSettings: (updates: Partial<Settings>) => Promise<void>;
 }
-
-interface Settings extends Model {
-    darkMode: boolean
-}
-
-const Settings = (darkMode: boolean = true): Settings => ({
-    darkMode,
-    toString() {
-        return `${darkMode}`;
-    },
-});
-
-const settingsConverter: ModelConverter = {
-    toFirestore: (settings: Settings) => {
-        console.log("to converter", settings);
-        return {
-            darkMode: settings.darkMode,
-        }
-    },
-    fromFirestore: (snapshot: any, options: any) => {
-        const data = snapshot.data(options);
-        console.log("from converter", data)
-        return Settings(data.darkMode);
-    },
-};
 
 const useSettings = (): SettingsProviderType => {
-    const [settings, setSettings] = useState<Settings>({
-        darkMode: true
-    });
-    const {user}: FireauthType = useFireauth();
-    const {db} = useFirebase();
+  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
+  const [isLoading, setIsLoading] = useState(true);
+  const settingsRef = useRef<Settings>(DEFAULT_SETTINGS);
+  const { user } = useFireauth();
+  const { db } = useFirebase();
 
-    useEffect(() => {
-        if(!db || !user) return;
-            const unsub = onSnapshot(doc(db, "settings", user.uid).withConverter(settingsConverter), (doc) => {
-                const source = doc.metadata.hasPendingWrites ? "Local" : "Server";
-                console.log(source, " data: ", doc.data());
-                if(!doc.data()) {
-                    setSettings(Settings())
-                } else {
-                    setSettings(doc.data());
-                }
-            });
-    }, [user, db]);
+  useEffect(() => {
+    settingsRef.current = settings;
+  }, [settings]);
 
-    // On settings object updated
-    // push new object to db
-    const sendSettingsToFirestore = newSettings =>  {
-        if (!user || !db ) return;
-        const ref = doc(db, "settings", user.uid).withConverter(settingsConverter);
-        setDoc(ref, newSettings)
-            .then(data => {
-                console.log("Yay! Updated settings!")
-            })
-            .catch(e => {
-                console.log(`There was an error pushing settings to firestore with userId=${user.uid}`)
-            })
-
+  useEffect(() => {
+    if (!db || !user) {
+      setIsLoading(false);
+      return;
     }
 
-    const toggleDarkMode = () => {
-        const newSettings = {...settings, darkMode:!settings.darkMode};
-        setSettings(newSettings)
-        sendSettingsToFirestore(newSettings);
+    setIsLoading(true);
+    const settingsDocRef = doc(db, 'settings', user.uid);
+
+    const unsubscribe = onSnapshot(
+      settingsDocRef,
+      (snapshot) => {
+        const normalizedSettings = normalizeSettings(snapshot.data());
+        settingsRef.current = normalizedSettings;
+        setSettings(normalizedSettings);
+        setIsLoading(false);
+      },
+      (error) => {
+        console.error('Failed to read user settings:', error);
+        setIsLoading(false);
+      }
+    );
+
+    return unsubscribe;
+  }, [db, user]);
+
+  const persistSettings = useCallback(async (nextSettings: Settings) => {
+    if (!db || !user) {
+      return;
     }
-    return { settings, toggleDarkMode };
-}
+
+    const settingsDocRef = doc(db, 'settings', user.uid);
+    await setDoc(settingsDocRef, nextSettings, { merge: true });
+  }, [db, user]);
+
+  const updateSettings = useCallback(async (updates: Partial<Settings>) => {
+    const nextSettings = mergeSettings(settingsRef.current, updates);
+    settingsRef.current = nextSettings;
+    setSettings(nextSettings);
+
+    try {
+      await persistSettings(nextSettings);
+    } catch (error) {
+      console.error('Failed to update user settings:', error);
+    }
+  }, [persistSettings]);
+
+  const toggleDarkMode = useCallback(async () => {
+    await updateSettings({ darkMode: !settingsRef.current.darkMode });
+  }, [updateSettings]);
+
+  const setDefaultDoseUnit = useCallback(async (doseUnit: DoseUnitPreference) => {
+    await updateSettings({ defaultDoseUnit: doseUnit });
+  }, [updateSettings]);
+
+  const setSortOrder = useCallback(async (sortOrder: SortOrderPreference) => {
+    await updateSettings({ sortOrder });
+  }, [updateSettings]);
+
+  const setNotificationsEnabled = useCallback(async (enabled: boolean) => {
+    await updateSettings({ notificationsEnabled: enabled });
+  }, [updateSettings]);
+
+  return {
+    settings,
+    isLoading,
+    toggleDarkMode,
+    setDefaultDoseUnit,
+    setSortOrder,
+    setNotificationsEnabled,
+    updateSettings,
+  };
+};
 
 export default useSettings;
