@@ -78,7 +78,7 @@ describe('plan.helpers', () => {
 
     it('resolves day index for in-range date', () => {
       const dayIndex = getPlanDayIndexForDate(plan, new Date('2026-03-05T12:00:00.000Z'));
-      expect(dayIndex).toBe(5);
+      expect(dayIndex).toBe(4);
     });
 
     it('clamps day index before start and after end', () => {

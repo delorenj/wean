@@ -172,10 +172,10 @@ export const generateSmartTaperPlan = (input: SmartTaperPlanInput): SmartTaperPl
 
 export const getPlanDayIndexForDate = (plan: SmartTaperPlan, date: Date): number => {
   const start = new Date(plan.startDateISO);
-  const startAtMidnight = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-  const dateAtMidnight = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const startAtMidnight = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate());
+  const dateAtMidnight = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
 
-  const diffMs = dateAtMidnight.getTime() - startAtMidnight.getTime();
+  const diffMs = dateAtMidnight - startAtMidnight;
   const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
 
   if (diffDays <= 0) {
