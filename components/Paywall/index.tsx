@@ -1,8 +1,10 @@
 import React from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
-import { Text, Button, ActivityIndicator, useTheme } from 'react-native-paper';
+import { Text, Button, ActivityIndicator } from 'react-native-paper';
 import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
 import { useRevenueCat } from '../../hooks/useRevenueCat';
+import useDesignTokens from '../../hooks/useDesignTokens';
+import { getCardSurfaceStyle } from '../../src/theme';
 
 interface PaywallProps {
   onDismiss?: () => void;
@@ -22,7 +24,8 @@ export const Paywall: React.FC<PaywallProps> = ({
   onDismiss,
   onSuccess,
 }) => {
-  const theme = useTheme();
+  const tokens = useDesignTokens();
+  const cardSurfaceStyle = getCardSurfaceStyle(tokens);
   const { isLoading, error, offerings } = useRevenueCat();
 
   const presentPaywall = async () => {
@@ -61,17 +64,17 @@ export const Paywall: React.FC<PaywallProps> = ({
 
   if (isLoading) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={styles.loadingText}>Loading subscription options...</Text>
+      <View style={[styles.container, cardSurfaceStyle]}>
+        <ActivityIndicator size="large" color={tokens.colors.primary[400]} />
+        <Text style={[styles.loadingText, { color: tokens.colors.onSurfaceVariant }]}>Loading subscription options...</Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <Text style={[styles.errorText, { color: theme.colors.error }]}>
+      <View style={[styles.container, cardSurfaceStyle]}>
+        <Text style={[styles.errorText, { color: tokens.colors.error }]}>
           Failed to load subscription options
         </Text>
         <Text style={styles.errorDetail}>{error}</Text>
@@ -84,8 +87,8 @@ export const Paywall: React.FC<PaywallProps> = ({
 
   if (!offerings) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <Text style={styles.errorText}>No subscription offerings available</Text>
+      <View style={[styles.container, cardSurfaceStyle]}>
+        <Text style={[styles.errorText, { color: tokens.colors.onSurface }]}>No subscription offerings available</Text>
         <Button mode="contained" onPress={onDismiss} style={styles.button}>
           Close
         </Button>
@@ -95,8 +98,8 @@ export const Paywall: React.FC<PaywallProps> = ({
 
   if (Platform.OS === 'web') {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <Text style={styles.errorText}>
+      <View style={[styles.container, cardSurfaceStyle]}>
+        <Text style={[styles.errorText, { color: tokens.colors.onSurface }]}>
           Subscriptions are not available on web platform
         </Text>
         <Button mode="contained" onPress={onDismiss} style={styles.button}>
@@ -107,8 +110,8 @@ export const Paywall: React.FC<PaywallProps> = ({
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <Button mode="contained" onPress={presentPaywall} style={styles.button}>
+    <View style={[styles.container, cardSurfaceStyle]}>
+      <Button mode="contained" onPress={presentPaywall} style={[styles.button, { backgroundColor: tokens.colors.primary[400] }]}>
         View Subscription Options
       </Button>
     </View>
@@ -117,7 +120,8 @@ export const Paywall: React.FC<PaywallProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    width: '100%',
+    minHeight: 220,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,

@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { Text } from 'react-native-paper';
 import Svg, { Circle, Path } from 'react-native-svg';
 import useDesignTokens from '../../hooks/useDesignTokens';
+import { getCardSurfaceStyle } from '../../src/theme';
 import { SmartTaperPlan } from '../../pages/plan.helpers';
 
 interface TaperCurveChartProps {
@@ -38,7 +39,9 @@ export const TaperCurveChart: React.FC<TaperCurveChartProps> = ({
   actualDose,
   testID,
 }) => {
-  const { colors, spacing, typography, borderRadius } = useDesignTokens();
+  const tokens = useDesignTokens();
+  const { colors, spacing, typography } = tokens;
+  const cardSurfaceStyle = getCardSurfaceStyle(tokens);
 
   const maxDose = Math.max(plan.currentDose, plan.targetDose, actualDose, 1);
 
@@ -63,10 +66,7 @@ export const TaperCurveChart: React.FC<TaperCurveChartProps> = ({
     <View
       testID={testID}
       style={{
-        borderRadius: borderRadius.lg,
-        borderWidth: 1,
-        borderColor: colors.neutral[200],
-        backgroundColor: colors.surfaceVariant,
+        ...cardSurfaceStyle,
         padding: spacing[16],
         gap: spacing[12],
       }}

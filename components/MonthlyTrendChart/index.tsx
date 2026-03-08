@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { Text } from 'react-native-paper';
 import Svg, { Circle, Line, Path, Text as SvgText } from 'react-native-svg';
 import useDesignTokens from '../../hooks/useDesignTokens';
+import { getCardSurfaceStyle } from '../../src/theme';
 import { DailyDoseTotal, RollingAveragePoint } from '../../pages/analytics.helpers';
 
 interface MonthlyTrendChartProps {
@@ -30,7 +31,9 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
   unit,
   testID,
 }) => {
-  const { colors, spacing, typography, borderRadius } = useDesignTokens();
+  const tokens = useDesignTokens();
+  const { colors, spacing, typography } = tokens;
+  const cardSurfaceStyle = getCardSurfaceStyle(tokens);
 
   const {
     plannedPath,
@@ -92,10 +95,7 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
     <View
       testID={testID}
       style={{
-        borderRadius: borderRadius.lg,
-        borderWidth: 1,
-        borderColor: colors.neutral[200],
-        backgroundColor: colors.surfaceVariant,
+        ...cardSurfaceStyle,
         padding: spacing[16],
         gap: spacing[12],
       }}

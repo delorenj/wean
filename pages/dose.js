@@ -2,8 +2,8 @@ import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Timestamp } from 'firebase/firestore';
-import { useTheme } from 'react-native-paper';
 import QuickDoseEntry from '../components/QuickDoseEntry';
+import ScreenTransition from '../components/ScreenTransition';
 import useDesignTokens from '../hooks/useDesignTokens';
 import { useDoses } from '../hooks/useDoses';
 import {
@@ -15,7 +15,6 @@ import {
 
 export const DosePage = () => {
   const tokens = useDesignTokens();
-  const theme = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const { doses, addDose, updateDose } = useDoses();
@@ -107,21 +106,49 @@ export const DosePage = () => {
       style={[
         styles.container,
         {
-          backgroundColor: theme.colors.background,
+          backgroundColor: tokens.colors.surface,
           padding: tokens.spacing[16],
+          gap: tokens.spacing[12],
         },
       ]}
     >
-      <QuickDoseEntry
-        mode={mode}
-        initialAmount={initialAmount}
-        initialUnit={initialUnit}
-        initialTimestamp={toEntryTimestampDate(doseToEdit?.date)}
-        initialNotes={doseToEdit?.notes || ''}
-        initialMethod={doseToEdit?.method || ''}
-        onSubmit={handleSubmit}
-        onCancel={mode === 'edit' ? handleCancel : undefined}
-      />
+      <ScreenTransition delay={40}>
+        <Text
+          style={{
+            color: tokens.colors.onSurface,
+            fontSize: tokens.typography.titleLarge.fontSize,
+            lineHeight: tokens.typography.titleLarge.lineHeight,
+            fontWeight: tokens.typography.titleLarge.fontWeight,
+          }}
+        >
+          {mode === 'edit' ? 'Update dose entry' : 'Log a new dose'}
+        </Text>
+
+        <Text
+          style={{
+            color: tokens.colors.onSurfaceVariant,
+            marginTop: tokens.spacing[4],
+            fontSize: tokens.typography.bodyMedium.fontSize,
+            lineHeight: tokens.typography.bodyMedium.lineHeight,
+            fontWeight: tokens.typography.bodyMedium.fontWeight,
+          }}
+        >
+          Keep entries clean and consistent so your taper insights stay accurate.
+        </Text>
+      </ScreenTransition>
+
+      <ScreenTransition delay={110}>
+        <QuickDoseEntry
+          mode={mode}
+          initialAmount={initialAmount}
+          initialUnit={initialUnit}
+          initialTimestamp={toEntryTimestampDate(doseToEdit?.date)}
+          initialNotes={doseToEdit?.notes || ''}
+          initialMethod={doseToEdit?.method || ''}
+          onSubmit={handleSubmit}
+          onCancel={mode === 'edit' ? handleCancel : undefined}
+        />
+      </ScreenTransition>
     </View>
   );
 };

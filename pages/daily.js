@@ -1,70 +1,74 @@
-import {ScrollView, View} from "react-native";
-import {FAB, useTheme} from "react-native-paper";
-import {useMainStyles} from "../hooks/useMainStyles";
-import {useFirebase} from "../context/firebaseConfig";
-import useFireauth from "../hooks/useFireauth";
-import {SafeAreaView} from "react-native-safe-area-context";
-import {DailyProvider} from "../context/dailyProvider";
-import TimelineList from "../components/DailyDoseTimeline";
-import Slider from '@react-native-community/slider';
-
-import {useState} from "react";
-import {DoseForm} from "../components/DoseForm";
-import {useNavigation} from "@react-navigation/native";
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { FAB } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import TimelineList from '../components/DailyDoseTimeline';
+import ScreenTransition from '../components/ScreenTransition';
+import useFireauth from '../hooks/useFireauth';
+import useDesignTokens from '../hooks/useDesignTokens';
 
 export const DailyPage = () => {
-    const theme = useTheme()
-    const styles = useMainStyles(theme)
-    const {db} = useFirebase();
-    const {user} = useFireauth();
-    const [fabState, setFabState] = useState({open: false});
-    const [showForm, setShowForm] = useState(false);
-    const navigation = useNavigation();
-    // Function to handle the onPress event of the FAB
-    const handleAddDose = () => {
-        // Logic to add a new dose to the timeline
-        // setShowForm(true);
-        navigation.navigate('Dose', { mode: 'add' });
-    };
-    return (
-        <SafeAreaView style={styles.safeAreaView}>
-            {user && !showForm &&
-                <TimelineList/>
-            }
-            {user && !showForm && (
-                <FAB
-                    visible={true}
-                    icon='plus'
-                    style={fabStyle}
-                    onPress={handleAddDose}
-                />
-            )}
-        </SafeAreaView>
-    );
-}
-const styles = {
-    safeAreaView: {
-        flex: 1,
-    },
-    container: {
-        flexGrow: 1,
-    },
+  const navigation = useNavigation();
+  const { user } = useFireauth();
+  const tokens = useDesignTokens();
 
-    sliderContainer: {
-        position: 'absolute',
-        bottom: 50, // You can adjust this value according to your needs
-        width: '100%',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.6)',
-        padding: 10,
-    },
+  const handleAddDose = () => {
+    navigation.navigate('Dose', { mode: 'add' });
+  };
+
+  return (
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        {
+          backgroundColor: tokens.colors.surface,
+        },
+      ]}
+    >
+      {user ? (
+        <>
+          <ScreenTransition delay={40} style={styles.content}>
+            <TimelineList onAddDosePress={handleAddDose} />
+          </ScreenTransition>
+
+          <ScreenTransition delay={140} style={styles.fabWrapper}>
+            <FAB
+              visible
+              icon="plus"
+              color={tokens.colors.neutral[0]}
+              style={[
+                styles.fab,
+                {
+                  borderRadius: tokens.borderRadius.full,
+                  backgroundColor: tokens.colors.primary[400],
+                  ...tokens.shadows.z3,
+                },
+              ]}
+              onPress={handleAddDose}
+            />
+          </ScreenTransition>
+        </>
+      ) : null}
+    </SafeAreaView>
+  );
 };
-const fabStyle = {
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+  },
+  fabWrapper: {
     position: 'absolute',
-    margin: 16,
     right: 0,
     bottom: 0,
-    borderRadius: 50,
-};
+  },
+  fab: {
+    margin: 18,
+  },
+});
 
 export default DailyPage;

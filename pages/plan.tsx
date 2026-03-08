@@ -20,6 +20,7 @@ import { useTaperSettings } from '../hooks/useTaperSettings';
 import { useAppTheme } from '../context/themeProvider';
 import { Paywall } from '../components/Paywall';
 import { useRevenueCat } from '../hooks/useRevenueCat';
+import ScreenTransition from '../components/ScreenTransition';
 import TaperCurveChart from '../components/TaperCurveChart';
 import {
   buildDoseChangeReminders,
@@ -36,6 +37,7 @@ import {
   loadSmartTaperPlan,
   saveSmartTaperPlan,
 } from '../utils/smartTaperPlanStorage';
+import { getCardSurfaceStyle } from '../src/theme';
 
 const DEFAULT_SUBSTANCES = ['Kratom', 'Nicotine', 'THC'];
 
@@ -61,7 +63,9 @@ const usePremiumAccess = () => {
 };
 
 export const PlanPage = () => {
-  const { colors, spacing, typography, borderRadius } = useDesignTokens();
+  const tokens = useDesignTokens();
+  const { colors, spacing, typography, borderRadius } = tokens;
+  const cardSurfaceStyle = getCardSurfaceStyle(tokens);
   const { totalDoses } = useDoses();
   const { selectedDate } = useDaily();
   const { updateSettings } = useTaperSettings();
@@ -177,10 +181,7 @@ export const PlanPage = () => {
           marginTop: spacing[4],
         },
         card: {
-          borderRadius: borderRadius.lg,
-          borderColor: colors.neutral[200],
-          borderWidth: 1,
-          backgroundColor: colors.surface,
+          ...cardSurfaceStyle,
         },
         row: {
           flexDirection: 'row',
@@ -200,7 +201,7 @@ export const PlanPage = () => {
           fontWeight: typography.bodySmall.fontWeight as '400',
         },
       }),
-    [borderRadius.lg, colors, spacing, typography]
+    [cardSurfaceStyle, colors, spacing, typography]
   );
 
   const handleStrategyChange = (nextStrategy: TaperStrategy) => {
@@ -273,13 +274,18 @@ export const PlanPage = () => {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={{ flex: 1, padding: spacing[16], gap: spacing[16] }}>
-          <View>
-            <Text style={styles.pageTitle}>Smart Taper Planner</Text>
-            <Text style={styles.pageSubtitle}>
-              Premium unlock: personalized taper algorithms, reminders, and planned vs actual tracking.
-            </Text>
-          </View>
-          <Paywall />
+          <ScreenTransition delay={20}>
+            <View>
+              <Text style={styles.pageTitle}>Smart Taper Planner</Text>
+              <Text style={styles.pageSubtitle}>
+                Premium unlock: personalized taper algorithms, reminders, and planned vs actual tracking.
+              </Text>
+            </View>
+          </ScreenTransition>
+
+          <ScreenTransition delay={90}>
+            <Paywall />
+          </ScreenTransition>
         </View>
       </SafeAreaView>
     );
@@ -288,14 +294,17 @@ export const PlanPage = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
-        <View>
-          <Text style={styles.pageTitle}>Smart Taper Planner</Text>
-          <Text style={styles.pageSubtitle}>
-            Build a personalized taper plan and compare your actual intake against daily targets.
-          </Text>
-        </View>
+        <ScreenTransition delay={20}>
+          <View>
+            <Text style={styles.pageTitle}>Smart Taper Planner</Text>
+            <Text style={styles.pageSubtitle}>
+              Build a personalized taper plan and compare your actual intake against daily targets.
+            </Text>
+          </View>
+        </ScreenTransition>
 
-        <Card style={styles.card}>
+        <ScreenTransition delay={70}>
+          <Card style={styles.card}>
           <Card.Title title="Plan setup" subtitle="Choose your substance, dose targets, and timeline" />
           <Card.Content style={{ gap: spacing[12] }}>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[8] }}>
@@ -398,11 +407,13 @@ export const PlanPage = () => {
               </Button>
             </View>
           </Card.Content>
-        </Card>
+          </Card>
+        </ScreenTransition>
 
         {activePlan ? (
           <>
-            <Card style={styles.card}>
+            <ScreenTransition delay={120}>
+              <Card style={styles.card}>
               <Card.Title title="Actual vs planned" subtitle={`Day ${activeDayIndex + 1} of ${activePlan.timelineDays}`} />
               <Card.Content style={{ gap: spacing[8] }}>
                 {doseComparison ? (
@@ -439,16 +450,20 @@ export const PlanPage = () => {
                   </>
                 ) : null}
               </Card.Content>
-            </Card>
+              </Card>
+            </ScreenTransition>
 
-            <TaperCurveChart
-              plan={activePlan}
-              activeDayIndex={activeDayIndex}
-              actualDose={totalDoses}
-              testID="taper-curve-chart"
-            />
+            <ScreenTransition delay={160}>
+              <TaperCurveChart
+                plan={activePlan}
+                activeDayIndex={activeDayIndex}
+                actualDose={totalDoses}
+                testID="taper-curve-chart"
+              />
+            </ScreenTransition>
 
-            <Card style={styles.card}>
+            <ScreenTransition delay={190}>
+              <Card style={styles.card}>
               <Card.Title title="Dose-change reminders" subtitle="Notifications for days when your target changes" />
               <Card.Content>
                 {!notificationsEnabled ? (
@@ -470,9 +485,11 @@ export const PlanPage = () => {
                   ))
                 )}
               </Card.Content>
-            </Card>
+              </Card>
+            </ScreenTransition>
 
-            <Card style={styles.card}>
+            <ScreenTransition delay={220}>
+              <Card style={styles.card}>
               <Card.Title title="Upcoming schedule" subtitle="Next 14 taper targets" />
               <Card.Content>
                 {activePlan.schedule.slice(activeDayIndex, activeDayIndex + 14).map((day) => (
@@ -484,7 +501,8 @@ export const PlanPage = () => {
                   />
                 ))}
               </Card.Content>
-            </Card>
+              </Card>
+            </ScreenTransition>
           </>
         ) : null}
       </ScrollView>
