@@ -198,7 +198,7 @@ export const BorderRadius = {
 
 // SHADOWS (z-depth 1-4)
 export const Shadows = {
-  none: 'none',
+  none: {},
   z1: {
     elevation: 2,
     shadowColor: '#000',

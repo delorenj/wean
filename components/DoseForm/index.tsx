@@ -43,7 +43,6 @@ export const DoseForm = () => {
               color={tokens.colors.primary[300]} 
               uncheckedColor={tokens.colors.neutral[400]}
               value="gram" 
-              accessibilityLabel="Dosage unit: grams"
             />
             <Text style={[styles.radioText, { color: tokens.colors.onSurface }]}>Gram</Text>
           </View>
@@ -53,7 +52,6 @@ export const DoseForm = () => {
               color={tokens.colors.primary[300]} 
               uncheckedColor={tokens.colors.neutral[400]}
               value="ounce"
-              accessibilityLabel="Dosage unit: ounces"
             />
             <Text style={[styles.radioText, { color: tokens.colors.onSurface }]}>Ounce</Text>
           </View>

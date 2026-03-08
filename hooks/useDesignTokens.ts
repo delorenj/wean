@@ -5,7 +5,7 @@
  */
 
 import { useTheme } from 'react-native-paper';
-import * as Tokens from '../tokens';
+import * as Tokens from '../src/tokens';
 
 export const useDesignTokens = () => {
   const theme = useTheme();
