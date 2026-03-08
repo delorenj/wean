@@ -4,18 +4,19 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import { Button, Card, Chip, List, ProgressBar, Snackbar, Text, TextInput } from 'react-native-paper';
 import useDesignTokens from '../../hooks/useDesignTokens';
 import { getCardSurfaceStyle } from '../../src/theme';
-import { Goal, SaveGoalInput } from '../../hooks/useGoals';
-import { GoalMilestoneState } from '../../hooks/useGoals.helpers';
+import { Goal, GoalMilestone, SaveGoalInput } from '../../hooks/useGoals';
+import { generateWeeklyMilestones } from '../../hooks/useGoals.helpers';
 
 interface GoalSettingProps {
   goal: Goal | null;
+  goalHistory: Goal[];
   currentDose: number;
   progressPercentage: number;
-  milestoneStates: GoalMilestoneState[];
-  celebrationMilestone: number | null;
+  celebrationMilestone: GoalMilestone | null;
   errorMessage?: string | null;
   onSave: (input: SaveGoalInput) => Promise<void>;
-  onClear: () => Promise<void>;
+  onAbandon: () => Promise<void>;
+  onComplete: () => Promise<void>;
   onDismissCelebration: () => void;
 }
 
@@ -26,15 +27,45 @@ const formatDateForDisplay = (date: Date): string =>
     year: 'numeric',
   }).format(date);
 
+const formatDateFromISO = (dateISO?: string | null): string => {
+  if (!dateISO) {
+    return '—';
+  }
+
+  const parsedDate = new Date(dateISO);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return '—';
+  }
+
+  return formatDateForDisplay(parsedDate);
+};
+
+const formatDateFromTimestamp = (timestamp?: { toDate?: () => Date } | null): string => {
+  const date = timestamp?.toDate?.();
+
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+    return '—';
+  }
+
+  return formatDateForDisplay(date);
+};
+
+const toDateISO = (date: Date): string =>
+  new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0))
+    .toISOString()
+    .split('T')[0];
+
 export const GoalSetting: React.FC<GoalSettingProps> = ({
   goal,
+  goalHistory,
   currentDose,
   progressPercentage,
-  milestoneStates,
   celebrationMilestone,
   errorMessage,
   onSave,
-  onClear,
+  onAbandon,
+  onComplete,
   onDismissCelebration,
 }) => {
   const tokens = useDesignTokens();
@@ -77,6 +108,7 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
+          gap: spacing[8],
         },
         helperText: {
           color: colors.onSurfaceVariant,
@@ -85,8 +117,23 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
           fontWeight: typography.bodySmall.fontWeight as '400',
         },
       }),
-    [cardSurfaceStyle, colors, typography]
+    [cardSurfaceStyle, colors, spacing, typography]
   );
+
+  const targetDose = Number(targetDoseInput);
+
+  const milestonePreview = useMemo(() => {
+    if (!Number.isFinite(targetDose) || targetDose <= 0 || targetDose >= currentDose) {
+      return [];
+    }
+
+    return generateWeeklyMilestones({
+      startDose: currentDose,
+      targetDose,
+      startDate: new Date(),
+      targetDate,
+    });
+  }, [currentDose, targetDate, targetDose]);
 
   const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     if (Platform.OS === 'android') {
@@ -107,8 +154,13 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
 
     const parsedTargetDose = Number(targetDoseInput);
 
-    if (!Number.isFinite(parsedTargetDose) || parsedTargetDose < 0) {
-      setFormError('Target dose must be a non-negative number.');
+    if (!Number.isFinite(parsedTargetDose) || parsedTargetDose <= 0) {
+      setFormError('Target dose must be greater than 0.');
+      return;
+    }
+
+    if (parsedTargetDose >= currentDose) {
+      setFormError('Target dose must be lower than your current dose.');
       return;
     }
 
@@ -131,24 +183,38 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
     }
   };
 
-  const handleClearGoal = async () => {
+  const handleAbandonGoal = async () => {
     setFormError(null);
 
     try {
-      await onClear();
-      setStatusMessage('Goal cleared. Set a new milestone anytime.');
+      await onAbandon();
+      setStatusMessage('Goal moved to history as abandoned.');
       setTargetDoseInput('');
       setNotes('');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to clear goal';
+      const message = error instanceof Error ? error.message : 'Failed to abandon goal';
       setFormError(message);
     }
   };
 
+  const handleCompleteGoal = async () => {
+    setFormError(null);
+
+    try {
+      await onComplete();
+      setStatusMessage('Goal marked complete 🎉');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to complete goal';
+      setFormError(message);
+    }
+  };
+
+  const todayISO = toDateISO(new Date());
+
   return (
     <View style={{ gap: spacing[16] }}>
       <Card style={styles.card}>
-        <Card.Title title="Goal setup" subtitle="Set your target dose, target date, and motivation" />
+        <Card.Title title="Goal wizard" subtitle="1) Target  2) Date  3) Weekly checkpoints" />
         <Card.Content style={{ gap: spacing[12] }}>
           <TextInput
             mode="outlined"
@@ -189,10 +255,27 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
             onChangeText={setNotes}
           />
 
+          {milestonePreview.length ? (
+            <View style={{ gap: spacing[6] }}>
+              <Text style={styles.helperText}>Milestone preview ({milestonePreview.length} checkpoints)</Text>
+              {milestonePreview.slice(0, 4).map((milestone) => (
+                <View key={milestone.id} style={styles.row}>
+                  <Text style={styles.helperText}>{milestone.label}</Text>
+                  <Text style={styles.helperText}>
+                    {formatDateFromISO(milestone.targetDateISO)} · {milestone.targetDose.toFixed(2)}
+                  </Text>
+                </View>
+              ))}
+              {milestonePreview.length > 4 ? (
+                <Text style={styles.helperText}>+{milestonePreview.length - 4} more checkpoints</Text>
+              ) : null}
+            </View>
+          ) : null}
+
           <View style={[styles.row, { justifyContent: 'flex-end', gap: spacing[12] }]}>
             {goal ? (
-              <Button mode="text" onPress={() => void handleClearGoal()}>
-                Clear Goal
+              <Button mode="text" onPress={() => void handleAbandonGoal()}>
+                Abandon Goal
               </Button>
             ) : null}
             <Button mode="contained" onPress={() => void handleSaveGoal()} loading={isSaving}>
@@ -208,7 +291,7 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
 
       {goal ? (
         <Card style={styles.card}>
-          <Card.Title title="Progress toward goal" subtitle="Current vs target dose" />
+          <Card.Title title="Progress toward goal" subtitle="Live progress + milestone tracking" />
           <Card.Content style={{ gap: spacing[10] }}>
             <View style={styles.row}>
               <Text style={styles.helperText}>Current dose</Text>
@@ -219,8 +302,8 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
               <Text>{goal.targetDose.toFixed(2)}</Text>
             </View>
             <View style={styles.row}>
-              <Text style={styles.helperText}>Started at</Text>
-              <Text>{goal.startDose.toFixed(2)}</Text>
+              <Text style={styles.helperText}>Target date</Text>
+              <Text>{formatDateFromTimestamp(goal.targetDate)}</Text>
             </View>
 
             <ProgressBar
@@ -230,31 +313,107 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
             />
             <Text style={styles.helperText}>{progressPercentage.toFixed(1)}% complete</Text>
 
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[8] }}>
-              {milestoneStates.map((milestone) => (
-                <Chip
-                  key={milestone.threshold}
-                  selected={milestone.isReached}
-                  icon={milestone.isReached ? 'flag-checkered' : 'flag-outline'}
-                >
-                  {milestone.threshold}%
-                </Chip>
-              ))}
+            <View style={{ gap: spacing[8] }}>
+              <Text style={{ fontWeight: '600' }}>Milestones</Text>
+              {goal.milestones.map((milestone) => {
+                const isOverdue = !milestone.achieved && milestone.targetDateISO <= todayISO;
+                const icon = milestone.achieved
+                  ? 'check-circle-outline'
+                  : isOverdue
+                  ? 'alert-circle-outline'
+                  : 'clock-outline';
+
+                return (
+                  <View
+                    key={milestone.id}
+                    style={{
+                      borderWidth: 1,
+                      borderColor: colors.neutral[200],
+                      borderRadius: borderRadius.md,
+                      backgroundColor: colors.surfaceVariant,
+                      padding: spacing[10],
+                      gap: spacing[6],
+                    }}
+                  >
+                    <View style={styles.row}>
+                      <Text style={{ fontWeight: '600' }}>{milestone.label}</Text>
+                      <Chip compact icon={icon}>
+                        {milestone.achieved ? 'Hit' : isOverdue ? 'Missed' : 'Upcoming'}
+                      </Chip>
+                    </View>
+                    <View style={styles.row}>
+                      <Text style={styles.helperText}>Checkpoint</Text>
+                      <Text>
+                        {formatDateFromISO(milestone.targetDateISO)} · {milestone.targetDose.toFixed(2)}
+                      </Text>
+                    </View>
+                    <View style={styles.row}>
+                      <Text style={styles.helperText}>Logged actual</Text>
+                      <Text>{milestone.actualDose === null ? '—' : milestone.actualDose.toFixed(2)}</Text>
+                    </View>
+                  </View>
+                );
+              })}
             </View>
+
+            <View style={[styles.row, { justifyContent: 'flex-end', gap: spacing[12] }]}>
+              <Button mode="outlined" onPress={() => void handleCompleteGoal()}>
+                Mark Complete
+              </Button>
+              <Button mode="text" onPress={() => void handleAbandonGoal()}>
+                Abandon
+              </Button>
+            </View>
+          </Card.Content>
+        </Card>
+      ) : null}
+
+      {goalHistory.length ? (
+        <Card style={styles.card}>
+          <Card.Title title="Goal history" subtitle="Completed and abandoned goals" />
+          <Card.Content style={{ gap: spacing[8] }}>
+            {goalHistory.map((historicGoal) => (
+              <View
+                key={historicGoal.id}
+                style={{
+                  borderWidth: 1,
+                  borderColor: colors.neutral[200],
+                  borderRadius: borderRadius.md,
+                  backgroundColor: colors.surfaceVariant,
+                  padding: spacing[10],
+                  gap: spacing[6],
+                }}
+              >
+                <View style={styles.row}>
+                  <Text style={{ fontWeight: '600' }}>
+                    {historicGoal.startDose.toFixed(2)} → {historicGoal.targetDose.toFixed(2)}
+                  </Text>
+                  <Chip compact icon={historicGoal.status === 'completed' ? 'trophy-outline' : 'close-circle-outline'}>
+                    {historicGoal.status === 'completed' ? 'Completed' : 'Abandoned'}
+                  </Chip>
+                </View>
+
+                <Text style={styles.helperText}>Target date: {formatDateFromTimestamp(historicGoal.targetDate)}</Text>
+                <Text style={styles.helperText}>
+                  Logged milestones hit: {historicGoal.milestones.filter((milestone) => milestone.achieved).length}/
+                  {historicGoal.milestones.length}
+                </Text>
+              </View>
+            ))}
           </Card.Content>
         </Card>
       ) : null}
 
       <Snackbar
         visible={Boolean(celebrationMilestone || statusMessage)}
-        duration={3500}
+        duration={4000}
         onDismiss={() => {
           onDismissCelebration();
           setStatusMessage(null);
         }}
       >
         {celebrationMilestone
-          ? `🎉 Milestone reached: ${celebrationMilestone}% complete! Keep going!`
+          ? `🎉 ${celebrationMilestone.label} hit! Target ${celebrationMilestone.targetDose.toFixed(2)} achieved.`
           : statusMessage}
       </Snackbar>
     </View>
