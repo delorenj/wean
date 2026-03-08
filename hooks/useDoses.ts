@@ -14,7 +14,6 @@ import {
   Unsubscribe,
 } from 'firebase/firestore';
 import { useFirebase } from '../context/firebaseConfig';
-import { startOfDay, endOfDay } from 'date-fns';
 import { useDaily } from '../context/dailyProvider';
 import { applyOptimisticDoseDelete, rollbackOptimisticDoseDelete } from './useDoses.helpers';
 
@@ -32,6 +31,7 @@ export interface Dose extends Model {
 
 export interface DosesProviderType {
   doses: Dose[];
+  doseHistory: Dose[];
   addDose: (dose: Dose) => Promise<void>;
   updateDose: (doseId: string, updates: Partial<Dose>) => Promise<void>;
   deleteDose: (doseId: string) => Promise<void>;
@@ -77,8 +77,27 @@ const DOSE_UNIT_CONVERSIONS: { [unit: string]: number } = {
   ounce: 28.3495,
 };
 
+const HISTORY_LOOKBACK_DAYS = 120;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+const getUTCStartOfDay = (date: Date): Date =>
+  new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0));
+
+const getUTCEndOfDay = (date: Date): Date =>
+  new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999));
+
+const addUTCDays = (date: Date, days: number): Date =>
+  new Date(date.getTime() + Math.trunc(days) * DAY_MS);
+
+const sortDosesByTimestamp = (left: Dose, right: Dose): number => {
+  const leftTime = left.date?.seconds ?? 0;
+  const rightTime = right.date?.seconds ?? 0;
+  return leftTime - rightTime;
+};
+
 export const useDoses = (): DosesProviderType => {
   const [doses, setDoses] = useState<Dose[]>([]);
+  const [doseHistory, setDoseHistory] = useState<Dose[]>([]);
   const { user }: FireauthType = useFireauth();
   const { db } = useFirebase();
   const { selectedDate } = useDaily();
@@ -100,6 +119,21 @@ export const useDoses = (): DosesProviderType => {
     };
   }, [user, db, selectedDate]);
 
+  useEffect(() => {
+    if (!db || !user) {
+      setDoseHistory([]);
+      return;
+    }
+
+    const unsubscribe = getDoseHistory();
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [user, db]);
+
   const getDosesByDate = (date: Date): Unsubscribe | undefined => {
     if (!db || !user) {
       return undefined;
@@ -107,9 +141,9 @@ export const useDoses = (): DosesProviderType => {
 
     const dosesRef = collection(db, `doses-${user.uid}`).withConverter(dosesConverter);
 
-    const startOfDay1 = Timestamp.fromDate(startOfDay(date));
-    const endOfDay1 = Timestamp.fromDate(endOfDay(date));
-    const dosesQuery = query(dosesRef, where('date', '>=', startOfDay1), where('date', '<=', endOfDay1));
+    const startOfDay = Timestamp.fromDate(getUTCStartOfDay(date));
+    const endOfDay = Timestamp.fromDate(getUTCEndOfDay(date));
+    const dosesQuery = query(dosesRef, where('date', '>=', startOfDay), where('date', '<=', endOfDay));
 
     return onSnapshot(
       dosesQuery,
@@ -119,10 +153,37 @@ export const useDoses = (): DosesProviderType => {
           dosesData.push(snapshotDoc.data());
         });
 
-        setDoses(dosesData);
+        setDoses(dosesData.sort(sortDosesByTimestamp));
       },
       (error) => {
         console.log('Failed to fetch doses:', error);
+      }
+    );
+  };
+
+  const getDoseHistory = (): Unsubscribe | undefined => {
+    if (!db || !user) {
+      return undefined;
+    }
+
+    const dosesRef = collection(db, `doses-${user.uid}`).withConverter(dosesConverter);
+    const historyStartDate = addUTCDays(getUTCStartOfDay(new Date()), -(HISTORY_LOOKBACK_DAYS - 1));
+    const historyStart = Timestamp.fromDate(historyStartDate);
+
+    const historyQuery = query(dosesRef, where('date', '>=', historyStart));
+
+    return onSnapshot(
+      historyQuery,
+      (querySnapshot) => {
+        const historyData: Dose[] = [];
+        querySnapshot.forEach((snapshotDoc) => {
+          historyData.push(snapshotDoc.data());
+        });
+
+        setDoseHistory(historyData.sort(sortDosesByTimestamp));
+      },
+      (error) => {
+        console.log('Failed to fetch dose history:', error);
       }
     );
   };
@@ -231,5 +292,14 @@ export const useDoses = (): DosesProviderType => {
     setTotalDoses(total / targetConversion);
   }, [doses, commonUnit]);
 
-  return { doses, addDose, updateDose, deleteDose, totalDoses, commonUnit, setCommonUnit };
+  return {
+    doses,
+    doseHistory,
+    addDose,
+    updateDose,
+    deleteDose,
+    totalDoses,
+    commonUnit,
+    setCommonUnit,
+  };
 };
