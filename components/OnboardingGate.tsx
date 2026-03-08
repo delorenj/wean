@@ -1,6 +1,6 @@
 /**
  * Onboarding Gate
- * 
+ *
  * Checks if user has completed onboarding and routes accordingly
  */
 
@@ -14,9 +14,10 @@ import { Tabs } from './tabs';
 export const OnboardingGate: React.FC = () => {
   const [isChecking, setIsChecking] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [initialRouteName, setInitialRouteName] = useState<'Daily' | 'Dose'>('Daily');
 
   useEffect(() => {
-    checkOnboardingStatus();
+    void checkOnboardingStatus();
   }, []);
 
   const checkOnboardingStatus = async () => {
@@ -33,6 +34,7 @@ export const OnboardingGate: React.FC = () => {
   };
 
   const handleOnboardingComplete = () => {
+    setInitialRouteName('Dose');
     setHasCompletedOnboarding(true);
   };
 
@@ -49,5 +51,5 @@ export const OnboardingGate: React.FC = () => {
     return <OnboardingPage onComplete={handleOnboardingComplete} />;
   }
 
-  return <Tabs />;
+  return <Tabs initialRouteName={initialRouteName} />;
 };

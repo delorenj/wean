@@ -9,14 +9,26 @@ import DebugPage from '../pages/debug';
 import { useTheme } from 'react-native-paper';
 import useDesignTokens from '../hooks/useDesignTokens';
 
-export const Tabs = () => {
+export const TABS_INITIAL_ROUTES = {
+  DAILY: 'Daily',
+  DOSE: 'Dose',
+};
+
+/**
+ * @typedef {'Daily' | 'Dose'} TabsInitialRouteName
+ */
+
+/**
+ * @param {{ initialRouteName?: TabsInitialRouteName }} props
+ */
+export const Tabs = ({ initialRouteName = TABS_INITIAL_ROUTES.DAILY }) => {
   const Tab = createMaterialTopTabNavigator();
   const theme = useTheme();
   const tokens = useDesignTokens();
 
   return (
     <Tab.Navigator
-      initialRouteName="Daily"
+      initialRouteName={initialRouteName}
       tabBarPosition="bottom"
       screenOptions={{
         tabBarActiveTintColor: tokens.colors.primary[400],
