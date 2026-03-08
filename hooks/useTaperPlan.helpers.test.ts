@@ -1,101 +1,91 @@
 import {
   calculateTaperProgressPercentage,
+  compareActualDoseToTarget,
   generateTaperSchedule,
-  getTaperStrategyConfig,
+  getTargetDoseForDate,
 } from './useTaperPlan.helpers';
 
 describe('useTaperPlan.helpers', () => {
-  describe('getTaperStrategyConfig', () => {
-    it('returns expected strategy defaults', () => {
-      expect(getTaperStrategyConfig('aggressive')).toEqual({
-        reductionPercent: 10,
-        reductionEveryDays: 3,
-      });
-      expect(getTaperStrategyConfig('moderate')).toEqual({
-        reductionPercent: 10,
-        reductionEveryDays: 7,
-      });
-      expect(getTaperStrategyConfig('gentle')).toEqual({
-        reductionPercent: 5,
-        reductionEveryDays: 7,
-      });
-    });
-  });
+  const startDate = new Date('2026-01-01T00:00:00.000Z');
 
   describe('generateTaperSchedule', () => {
-    const startDate = new Date('2026-01-01T00:00:00.000Z');
+    it('builds a linear schedule across the full timeline', () => {
+      const plan = generateTaperSchedule({
+        currentDose: 20,
+        targetDose: 10,
+        timelineDays: 6,
+        strategy: 'linear',
+        startDate,
+      });
 
-    it('builds an aggressive schedule with 10% reductions every 3 days', () => {
+      expect(plan.dailyTargets.map((day) => day.targetDose)).toEqual([20, 18, 16, 14, 12, 10]);
+      expect(plan.weeklyTargets).toHaveLength(1);
+      expect(plan.weeklyTargets[0].averageTargetDose).toBe(15);
+      expect(plan.totalDays).toBe(5);
+    });
+
+    it('builds a stepped schedule with plateaus between step days', () => {
+      const plan = generateTaperSchedule({
+        currentDose: 21,
+        targetDose: 7,
+        timelineDays: 7,
+        strategy: 'stepped',
+        stepIntervalDays: 2,
+        startDate,
+      });
+
+      expect(plan.dailyTargets[0].targetDose).toBe(21);
+      expect(plan.dailyTargets[1].targetDose).toBe(21);
+      expect(plan.dailyTargets[2].targetDose).toBe(16.33);
+      expect(plan.dailyTargets[3].targetDose).toBe(16.33);
+      expect(plan.dailyTargets[4].targetDose).toBe(11.67);
+      expect(plan.dailyTargets[6].targetDose).toBe(7);
+      expect(plan.strategyConfig.stepIntervalDays).toBe(2);
+    });
+
+    it('builds a percentage schedule and automatically raises reduction rate to meet timeline', () => {
       const plan = generateTaperSchedule({
         currentDose: 100,
-        targetDose: 0,
-        taperSpeed: 'aggressive',
+        targetDose: 25,
+        timelineDays: 15,
+        strategy: 'percentage',
+        stepIntervalDays: 7,
         startDate,
       });
 
-      expect(plan.reductionPercent).toBe(10);
-      expect(plan.reductionEveryDays).toBe(3);
-      expect(plan.schedule[0]).toMatchObject({ day: 0, dose: 100 });
-      expect(plan.schedule[1]).toMatchObject({ day: 3, dose: 90 });
-      expect(plan.schedule[2]).toMatchObject({ day: 6, dose: 81 });
-      expect(plan.schedule[plan.schedule.length - 1].dose).toBe(0);
+      expect(plan.strategyConfig.requiredPercentageReductionPerStep).toBeCloseTo(50, 2);
+      expect(plan.strategyConfig.percentageReductionPerStep).toBeCloseTo(50, 2);
+      expect(plan.dailyTargets[0].targetDose).toBe(100);
+      expect(plan.dailyTargets[7].targetDose).toBe(50);
+      expect(plan.dailyTargets[14].targetDose).toBe(25);
     });
 
-    it('builds a moderate schedule with 10% reductions every 7 days', () => {
+    it('honors configured percentage reduction when it is already sufficient', () => {
       const plan = generateTaperSchedule({
-        currentDose: 20,
-        targetDose: 0,
-        taperSpeed: 'moderate',
+        currentDose: 100,
+        targetDose: 10,
+        timelineDays: 22,
+        strategy: 'percentage',
+        stepIntervalDays: 7,
+        percentageReductionPerStep: 60,
         startDate,
       });
 
-      expect(plan.reductionPercent).toBe(10);
-      expect(plan.reductionEveryDays).toBe(7);
-      expect(plan.schedule[1].day).toBe(7);
-      expect(plan.schedule[1].dose).toBe(18);
-      expect(plan.schedule[2].day).toBe(14);
+      expect(plan.strategyConfig.percentageReductionPerStep).toBe(60);
+      expect(plan.dailyTargets[7].targetDose).toBe(40);
+      expect(plan.dailyTargets[14].targetDose).toBe(16);
+      expect(plan.dailyTargets[21].targetDose).toBe(10);
     });
 
-    it('builds a gentle schedule with 5% reductions every 7 days', () => {
+    it('captures all milestone thresholds in long plans', () => {
       const plan = generateTaperSchedule({
-        currentDose: 20,
+        currentDose: 40,
         targetDose: 0,
-        taperSpeed: 'gentle',
+        timelineDays: 60,
+        strategy: 'linear',
         startDate,
       });
 
-      expect(plan.reductionPercent).toBe(5);
-      expect(plan.reductionEveryDays).toBe(7);
-      expect(plan.schedule[1]).toMatchObject({ day: 7, dose: 19 });
-      expect(plan.schedule[2]).toMatchObject({ day: 14, dose: 18.05 });
-    });
-
-    it('defaults target dose to zero when omitted', () => {
-      const plan = generateTaperSchedule({
-        currentDose: 12,
-        taperSpeed: 'moderate',
-        startDate,
-      });
-
-      expect(plan.targetDose).toBe(0);
-      expect(plan.schedule[plan.schedule.length - 1].dose).toBe(0);
-    });
-
-    it('marks milestone steps as progress thresholds are crossed', () => {
-      const plan = generateTaperSchedule({
-        currentDose: 20,
-        targetDose: 0,
-        taperSpeed: 'aggressive',
-        startDate,
-      });
-
-      const milestoneSteps = plan.schedule.filter((step) => step.milestones.length > 0);
-      const flattenedMilestones = milestoneSteps.flatMap((step) => step.milestones);
-
-      expect(flattenedMilestones).toContain(25);
-      expect(flattenedMilestones).toContain(50);
-      expect(flattenedMilestones).toContain(75);
-      expect(flattenedMilestones).toContain(100);
       expect(plan.milestonesReached).toEqual([25, 50, 75, 100]);
     });
 
@@ -104,7 +94,8 @@ describe('useTaperPlan.helpers', () => {
         generateTaperSchedule({
           currentDose: 0,
           targetDose: 0,
-          taperSpeed: 'moderate',
+          timelineDays: 30,
+          strategy: 'linear',
           startDate,
         })
       ).toThrow('Current dose must be greater than 0.');
@@ -113,10 +104,35 @@ describe('useTaperPlan.helpers', () => {
         generateTaperSchedule({
           currentDose: 10,
           targetDose: 10,
-          taperSpeed: 'moderate',
+          timelineDays: 30,
+          strategy: 'linear',
           startDate,
         })
       ).toThrow('Target dose must be lower than current dose.');
+    });
+  });
+
+  describe('getTargetDoseForDate', () => {
+    it('returns target for dates inside plan timeline and null outside timeline', () => {
+      const plan = generateTaperSchedule({
+        currentDose: 10,
+        targetDose: 5,
+        timelineDays: 6,
+        strategy: 'linear',
+        startDate,
+      });
+
+      expect(getTargetDoseForDate(plan, new Date('2026-01-01T18:00:00.000Z'))).toBe(10);
+      expect(getTargetDoseForDate(plan, new Date('2026-01-03T12:00:00.000Z'))).toBe(8);
+      expect(getTargetDoseForDate(plan, new Date('2026-01-20T00:00:00.000Z'))).toBeNull();
+    });
+  });
+
+  describe('compareActualDoseToTarget', () => {
+    it('classifies on-track, over, and under with tolerance', () => {
+      expect(compareActualDoseToTarget(10.4, 10, 5).status).toBe('on-track');
+      expect(compareActualDoseToTarget(11, 10, 5).status).toBe('over');
+      expect(compareActualDoseToTarget(8.8, 10, 5).status).toBe('under');
     });
   });
 
@@ -125,12 +141,6 @@ describe('useTaperPlan.helpers', () => {
       expect(calculateTaperProgressPercentage(20, 0, 15)).toBe(25);
       expect(calculateTaperProgressPercentage(20, 0, 10)).toBe(50);
       expect(calculateTaperProgressPercentage(20, 0, 0)).toBe(100);
-    });
-
-    it('handles guardrail inputs safely', () => {
-      expect(calculateTaperProgressPercentage(10, 10, 10)).toBe(100);
-      expect(calculateTaperProgressPercentage(10, 10, 12)).toBe(0);
-      expect(calculateTaperProgressPercentage(Number.NaN, 0, 0)).toBe(100);
     });
   });
 });

@@ -1,56 +1,89 @@
 export const TAPER_MILESTONES = [25, 50, 75, 100] as const;
 
 export type TaperMilestone = (typeof TAPER_MILESTONES)[number];
-export type TaperSpeed = 'aggressive' | 'moderate' | 'gentle';
+export type TaperStrategy = 'linear' | 'stepped' | 'percentage';
 
 export interface TaperStrategyConfig {
-  reductionPercent: number;
-  reductionEveryDays: number;
+  stepIntervalDays: number;
+  percentageReductionPerStep: number | null;
+  requiredPercentageReductionPerStep: number | null;
 }
 
-export interface TaperScheduleStep {
-  step: number;
+export interface TaperDailyTarget {
   day: number;
   dateISO: string;
-  dose: number;
+  targetDose: number;
+  isAdjustmentDay: boolean;
   milestones: TaperMilestone[];
+  progressPercentage: number;
+}
+
+export interface TaperWeeklyTarget {
+  week: number;
+  startDay: number;
+  endDay: number;
+  startDateISO: string;
+  endDateISO: string;
+  averageTargetDose: number;
+  startDose: number;
+  endDose: number;
 }
 
 export interface GenerateTaperScheduleInput {
   currentDose: number;
-  targetDose?: number;
-  taperSpeed: TaperSpeed;
+  targetDose: number;
+  timelineDays: number;
+  strategy: TaperStrategy;
   startDate?: Date;
-  maxSteps?: number;
+  stepIntervalDays?: number;
+  percentageReductionPerStep?: number;
 }
 
 export interface GeneratedTaperSchedule {
   startDose: number;
   targetDose: number;
-  taperSpeed: TaperSpeed;
-  reductionPercent: number;
-  reductionEveryDays: number;
+  timelineDays: number;
+  totalDays: number;
+  strategy: TaperStrategy;
+  strategyConfig: TaperStrategyConfig;
   startDateISO: string;
   estimatedCompletionDateISO: string;
-  totalDays: number;
-  schedule: TaperScheduleStep[];
+  dailyTargets: TaperDailyTarget[];
+  weeklyTargets: TaperWeeklyTarget[];
   milestonesReached: TaperMilestone[];
 }
 
-const DEFAULT_TARGET_DOSE = 0;
-const DEFAULT_MAX_STEPS = 500;
+export interface DoseDeviation {
+  dateISO: string;
+  targetDose: number;
+  actualDose: number;
+  delta: number;
+  status: 'under' | 'on-track' | 'over';
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 const DOSE_PRECISION = 100;
+const DEFAULT_STEP_INTERVAL_DAYS = 7;
+const DEFAULT_PERCENTAGE_REDUCTION_PER_STEP = 10;
+const MIN_TIMELINE_DAYS = 2;
 
 const toUTCStartOfDay = (date: Date): Date =>
   new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0));
 
-const addUTCDays = (date: Date, days: number): Date => {
-  const next = new Date(date);
-  next.setUTCDate(next.getUTCDate() + Math.trunc(days));
-  return next;
-};
+const addUTCDays = (date: Date, days: number): Date =>
+  new Date(date.getTime() + Math.trunc(days) * DAY_MS);
+
+const toDateISO = (date: Date): string => date.toISOString().split('T')[0];
 
 const clampDose = (value: number): number => Math.round(value * DOSE_PRECISION) / DOSE_PRECISION;
+
+const clampPositive = (value: number, fallback: number): number => {
+  if (!Number.isFinite(value)) {
+    return fallback;
+  }
+
+  return Math.max(0, value);
+};
 
 const clampProgress = (value: number): number => {
   if (!Number.isFinite(value)) {
@@ -68,25 +101,20 @@ const clampProgress = (value: number): number => {
   return value;
 };
 
-export const getTaperStrategyConfig = (speed: TaperSpeed): TaperStrategyConfig => {
-  if (speed === 'aggressive') {
-    return {
-      reductionPercent: 10,
-      reductionEveryDays: 3,
-    };
+const toSafeIntervalDays = (value?: number): number => {
+  if (!Number.isFinite(value)) {
+    return DEFAULT_STEP_INTERVAL_DAYS;
   }
 
-  if (speed === 'gentle') {
-    return {
-      reductionPercent: 5,
-      reductionEveryDays: 7,
-    };
+  return Math.max(1, Math.floor(value as number));
+};
+
+const toSafePercentageStep = (value?: number): number => {
+  if (!Number.isFinite(value)) {
+    return DEFAULT_PERCENTAGE_REDUCTION_PER_STEP;
   }
 
-  return {
-    reductionPercent: 10,
-    reductionEveryDays: 7,
-  };
+  return Math.min(95, Math.max(0.1, value as number));
 };
 
 export const calculateTaperProgressPercentage = (
@@ -94,9 +122,9 @@ export const calculateTaperProgressPercentage = (
   targetDose: number,
   currentDose: number
 ): number => {
-  const safeStart = Number.isFinite(startDose) ? Math.max(0, startDose) : 0;
-  const safeTarget = Number.isFinite(targetDose) ? Math.max(0, targetDose) : 0;
-  const safeCurrent = Number.isFinite(currentDose) ? Math.max(0, currentDose) : 0;
+  const safeStart = clampPositive(startDose, 0);
+  const safeTarget = clampPositive(targetDose, 0);
+  const safeCurrent = clampPositive(currentDose, 0);
 
   if (safeStart <= safeTarget) {
     return safeCurrent <= safeTarget ? 100 : 0;
@@ -122,13 +150,163 @@ const getMilestonesReachedInStep = (
   );
 };
 
+const calculateRequiredPercentageReduction = (
+  startDose: number,
+  targetDose: number,
+  steps: number
+): number => {
+  if (steps <= 0 || startDose <= 0 || targetDose <= 0 || targetDose >= startDose) {
+    return 0;
+  }
+
+  const ratio = targetDose / startDose;
+  const requiredBase = Math.pow(ratio, 1 / steps);
+  const requiredReduction = (1 - requiredBase) * 100;
+
+  return Math.min(95, Math.max(0, requiredReduction));
+};
+
+const generateLinearDose = (
+  day: number,
+  timelineDays: number,
+  startDose: number,
+  targetDose: number
+): number => {
+  const denominator = Math.max(1, timelineDays - 1);
+  const progress = day / denominator;
+  return startDose - (startDose - targetDose) * progress;
+};
+
+const generateSteppedDose = (
+  day: number,
+  timelineDays: number,
+  startDose: number,
+  targetDose: number,
+  stepIntervalDays: number
+): number => {
+  const totalStepEvents = Math.max(1, Math.ceil((timelineDays - 1) / stepIntervalDays));
+  const stepIndex = Math.min(totalStepEvents, Math.floor(day / stepIntervalDays));
+  const progress = stepIndex / totalStepEvents;
+  return startDose - (startDose - targetDose) * progress;
+};
+
+const generatePercentageDose = (
+  day: number,
+  timelineDays: number,
+  startDose: number,
+  targetDose: number,
+  stepIntervalDays: number,
+  configuredPercentageReductionPerStep?: number
+): { dose: number; percentageReductionPerStep: number; requiredPercentageReductionPerStep: number } => {
+  const totalStepEvents = Math.max(1, Math.ceil((timelineDays - 1) / stepIntervalDays));
+  const stepIndex = Math.min(totalStepEvents, Math.floor(day / stepIntervalDays));
+  const requiredPercentageReductionPerStep = calculateRequiredPercentageReduction(
+    startDose,
+    targetDose,
+    totalStepEvents
+  );
+
+  const configuredReduction = toSafePercentageStep(configuredPercentageReductionPerStep);
+  const percentageReductionPerStep =
+    targetDose > 0
+      ? Math.max(configuredReduction, requiredPercentageReductionPerStep)
+      : configuredReduction;
+
+  const dose = startDose * Math.pow(1 - percentageReductionPerStep / 100, stepIndex);
+
+  return {
+    dose,
+    percentageReductionPerStep,
+    requiredPercentageReductionPerStep,
+  };
+};
+
+const buildWeeklyTargets = (dailyTargets: TaperDailyTarget[]): TaperWeeklyTarget[] => {
+  const weeklyTargets: TaperWeeklyTarget[] = [];
+
+  for (let offset = 0; offset < dailyTargets.length; offset += 7) {
+    const weekSlice = dailyTargets.slice(offset, offset + 7);
+
+    if (!weekSlice.length) {
+      continue;
+    }
+
+    const week = Math.floor(offset / 7) + 1;
+    const averageTargetDose =
+      weekSlice.reduce((runningTotal, dayTarget) => runningTotal + dayTarget.targetDose, 0) / weekSlice.length;
+
+    weeklyTargets.push({
+      week,
+      startDay: weekSlice[0].day,
+      endDay: weekSlice[weekSlice.length - 1].day,
+      startDateISO: weekSlice[0].dateISO,
+      endDateISO: weekSlice[weekSlice.length - 1].dateISO,
+      averageTargetDose: clampDose(averageTargetDose),
+      startDose: weekSlice[0].targetDose,
+      endDose: weekSlice[weekSlice.length - 1].targetDose,
+    });
+  }
+
+  return weeklyTargets;
+};
+
+export const getTargetDoseForDate = (
+  plan: Pick<GeneratedTaperSchedule, 'startDateISO' | 'dailyTargets'>,
+  date: Date
+): number | null => {
+  if (!plan.dailyTargets.length || !(date instanceof Date) || Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  const startDate = new Date(plan.startDateISO);
+
+  if (Number.isNaN(startDate.getTime())) {
+    return null;
+  }
+
+  const dayOffset = Math.floor((toUTCStartOfDay(date).getTime() - toUTCStartOfDay(startDate).getTime()) / DAY_MS);
+
+  if (dayOffset < 0 || dayOffset >= plan.dailyTargets.length) {
+    return null;
+  }
+
+  return plan.dailyTargets[dayOffset].targetDose;
+};
+
+export const compareActualDoseToTarget = (
+  actualDose: number,
+  targetDose: number,
+  tolerancePercent = 10
+): DoseDeviation => {
+  const safeActualDose = clampPositive(actualDose, 0);
+  const safeTargetDose = clampPositive(targetDose, 0);
+  const tolerance = Math.max(0, (safeTargetDose * Math.max(0, tolerancePercent)) / 100);
+  const delta = clampDose(safeActualDose - safeTargetDose);
+
+  if (Math.abs(delta) <= tolerance) {
+    return {
+      dateISO: '',
+      targetDose: safeTargetDose,
+      actualDose: safeActualDose,
+      delta,
+      status: 'on-track',
+    };
+  }
+
+  return {
+    dateISO: '',
+    targetDose: safeTargetDose,
+    actualDose: safeActualDose,
+    delta,
+    status: delta > 0 ? 'over' : 'under',
+  };
+};
+
 export const generateTaperSchedule = (
   input: GenerateTaperScheduleInput
 ): GeneratedTaperSchedule => {
-  const safeCurrentDose = Number.isFinite(input.currentDose) ? Math.max(0, input.currentDose) : NaN;
-  const safeTargetDose = Number.isFinite(input.targetDose)
-    ? Math.max(0, input.targetDose as number)
-    : DEFAULT_TARGET_DOSE;
+  const safeCurrentDose = clampPositive(input.currentDose, Number.NaN);
+  const safeTargetDose = clampPositive(input.targetDose, Number.NaN);
 
   if (!Number.isFinite(safeCurrentDose) || safeCurrentDose <= 0) {
     throw new Error('Current dose must be greater than 0.');
@@ -142,87 +320,109 @@ export const generateTaperSchedule = (
     throw new Error('Target dose must be lower than current dose.');
   }
 
+  const safeTimelineDays =
+    Number.isFinite(input.timelineDays) && Math.floor(input.timelineDays) >= MIN_TIMELINE_DAYS
+      ? Math.floor(input.timelineDays)
+      : MIN_TIMELINE_DAYS;
+
   const startDate =
     input.startDate instanceof Date && !Number.isNaN(input.startDate.getTime())
       ? toUTCStartOfDay(input.startDate)
       : toUTCStartOfDay(new Date());
 
-  const maxSteps =
-    Number.isInteger(input.maxSteps) && (input.maxSteps as number) > 1
-      ? (input.maxSteps as number)
-      : DEFAULT_MAX_STEPS;
+  const stepIntervalDays = toSafeIntervalDays(input.stepIntervalDays);
 
-  const strategyConfig = getTaperStrategyConfig(input.taperSpeed);
-  const schedule: TaperScheduleStep[] = [];
+  const dailyTargets: TaperDailyTarget[] = [];
   const reachedMilestones = new Set<TaperMilestone>();
 
-  let currentDose = clampDose(safeCurrentDose);
+  let previousDose = clampDose(safeCurrentDose);
+  let configuredPercentageReductionPerStep: number | null = null;
+  let requiredPercentageReductionPerStep: number | null = null;
 
-  schedule.push({
-    step: 1,
-    day: 0,
-    dateISO: startDate.toISOString().split('T')[0],
-    dose: currentDose,
-    milestones: [],
-  });
+  for (let day = 0; day < safeTimelineDays; day += 1) {
+    let targetDoseForDay = safeCurrentDose;
 
-  let stepCounter = 1;
+    if (input.strategy === 'linear') {
+      targetDoseForDay = generateLinearDose(day, safeTimelineDays, safeCurrentDose, safeTargetDose);
+    } else if (input.strategy === 'stepped') {
+      targetDoseForDay = generateSteppedDose(
+        day,
+        safeTimelineDays,
+        safeCurrentDose,
+        safeTargetDose,
+        stepIntervalDays
+      );
+    } else {
+      const percentageDose = generatePercentageDose(
+        day,
+        safeTimelineDays,
+        safeCurrentDose,
+        safeTargetDose,
+        stepIntervalDays,
+        input.percentageReductionPerStep
+      );
 
-  while (currentDose > safeTargetDose && stepCounter < maxSteps) {
-    const rawNextDose = currentDose * (1 - strategyConfig.reductionPercent / 100);
-    let nextDose = clampDose(Math.max(safeTargetDose, rawNextDose));
-
-    if (nextDose >= currentDose) {
-      const minDrop = clampDose(currentDose - 0.01);
-      nextDose = Math.max(safeTargetDose, minDrop);
+      targetDoseForDay = percentageDose.dose;
+      configuredPercentageReductionPerStep = percentageDose.percentageReductionPerStep;
+      requiredPercentageReductionPerStep = percentageDose.requiredPercentageReductionPerStep;
     }
 
-    if (nextDose < safeTargetDose) {
-      nextDose = safeTargetDose;
+    if (day === safeTimelineDays - 1) {
+      targetDoseForDay = safeTargetDose;
     }
+
+    targetDoseForDay = clampDose(Math.max(safeTargetDose, targetDoseForDay));
 
     const milestones = getMilestonesReachedInStep(
-      currentDose,
-      nextDose,
+      previousDose,
+      targetDoseForDay,
       safeCurrentDose,
       safeTargetDose
     );
 
-    milestones.forEach((milestone) => {
-      reachedMilestones.add(milestone);
-    });
+    milestones.forEach((milestone) => reachedMilestones.add(milestone));
 
-    const day = strategyConfig.reductionEveryDays * stepCounter;
-    const stepDate = addUTCDays(startDate, day);
+    const progressPercentage = calculateTaperProgressPercentage(
+      safeCurrentDose,
+      safeTargetDose,
+      targetDoseForDay
+    );
 
-    schedule.push({
-      step: stepCounter + 1,
+    dailyTargets.push({
       day,
-      dateISO: stepDate.toISOString().split('T')[0],
-      dose: nextDose,
+      dateISO: toDateISO(addUTCDays(startDate, day)),
+      targetDose: targetDoseForDay,
+      isAdjustmentDay:
+        day === 0 ||
+        day === safeTimelineDays - 1 ||
+        input.strategy === 'linear' ||
+        day % stepIntervalDays === 0,
       milestones,
+      progressPercentage,
     });
 
-    currentDose = nextDose;
-    stepCounter += 1;
+    previousDose = targetDoseForDay;
   }
 
-  const lastStep = schedule[schedule.length - 1];
-
-  if (lastStep.dose !== safeTargetDose) {
-    throw new Error('Unable to generate taper schedule with provided values.');
-  }
+  const weeklyTargets = buildWeeklyTargets(dailyTargets);
 
   return {
     startDose: safeCurrentDose,
     targetDose: safeTargetDose,
-    taperSpeed: input.taperSpeed,
-    reductionPercent: strategyConfig.reductionPercent,
-    reductionEveryDays: strategyConfig.reductionEveryDays,
+    timelineDays: safeTimelineDays,
+    totalDays: safeTimelineDays - 1,
+    strategy: input.strategy,
+    strategyConfig: {
+      stepIntervalDays,
+      percentageReductionPerStep:
+        input.strategy === 'percentage' ? configuredPercentageReductionPerStep : null,
+      requiredPercentageReductionPerStep:
+        input.strategy === 'percentage' ? requiredPercentageReductionPerStep : null,
+    },
     startDateISO: startDate.toISOString(),
-    estimatedCompletionDateISO: new Date(`${lastStep.dateISO}T00:00:00.000Z`).toISOString(),
-    totalDays: lastStep.day,
-    schedule,
+    estimatedCompletionDateISO: addUTCDays(startDate, safeTimelineDays - 1).toISOString(),
+    dailyTargets,
+    weeklyTargets,
     milestonesReached: TAPER_MILESTONES.filter((milestone) => reachedMilestones.has(milestone)),
   };
 };
