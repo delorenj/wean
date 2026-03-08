@@ -4,6 +4,7 @@ import DosePage from '../pages/dose';
 import AnalyticsPage from '../pages/analytics';
 import PlanPage from '../pages/plan';
 import GoalsPage from '../pages/goals';
+import TaperPage from '../pages/taper';
 import SettingsPage from '../pages/settings';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import DebugPage from '../pages/debug';
@@ -85,6 +86,13 @@ export const Tabs = ({ initialRouteName = TABS_INITIAL_ROUTES.DAILY }) => {
         tabBarLabelStyle: { fontSize: 8 },
         tabBarIcon: ({ color }) => (
           <MaterialCommunityIcons name="flag-checkered" color={color} size={26} />
+        ),
+      }} />
+      <Tab.Screen name="Taper" component={TaperPage} options={{
+        tabBarLabel: 'Taper',
+        tabBarLabelStyle: { fontSize: 8 },
+        tabBarIcon: ({ color }) => (
+          <MaterialCommunityIcons name="stairs-down" color={color} size={26} />
         ),
       }} />
       <Tab.Screen name="Settings" component={SettingsPage} options={{
