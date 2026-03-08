@@ -59,6 +59,12 @@
     "jest-circus": "^29.7.0",
     "typescript": "^5.7.2"
   },
+  "jest": {
+    "preset": "react-native",
+    "transformIgnorePatterns": [
+      "node_modules/(?!(react-native|react-native-svg|@react-native)/)"
+    ]
+  },
   "hermes_exec": "hermes",
   "overrides": {
     "tar": "^6.2.1"
