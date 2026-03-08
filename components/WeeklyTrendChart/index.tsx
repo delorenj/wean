@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { Text } from 'react-native-paper';
 import Svg, { Line, Path, Rect, Text as SvgText } from 'react-native-svg';
 import useDesignTokens from '../../hooks/useDesignTokens';
+import { getCardSurfaceStyle } from '../../src/theme';
 import { DailyDoseTotal, RollingAveragePoint } from '../../pages/analytics.helpers';
 
 interface WeeklyTrendChartProps {
@@ -31,7 +32,9 @@ export const WeeklyTrendChart: React.FC<WeeklyTrendChartProps> = ({
   unit,
   testID,
 }) => {
-  const { colors, spacing, typography, borderRadius } = useDesignTokens();
+  const tokens = useDesignTokens();
+  const { colors, spacing, typography } = tokens;
+  const cardSurfaceStyle = getCardSurfaceStyle(tokens);
 
   const {
     barSlots,
@@ -90,10 +93,7 @@ export const WeeklyTrendChart: React.FC<WeeklyTrendChartProps> = ({
     <View
       testID={testID}
       style={{
-        borderRadius: borderRadius.lg,
-        borderWidth: 1,
-        borderColor: colors.neutral[200],
-        backgroundColor: colors.surfaceVariant,
+        ...cardSurfaceStyle,
         padding: spacing[16],
         gap: spacing[12],
       }}

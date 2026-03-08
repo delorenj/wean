@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, TextStyle, View } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 import useDesignTokens from '../../hooks/useDesignTokens';
+import { getCardSurfaceStyle } from '../../src/theme';
 
 export interface DailyDoseGaugeProps {
   /** Current daily dose consumed. */
@@ -90,6 +91,7 @@ export const DailyDoseGauge: React.FC<DailyDoseGaugeProps> = ({
   testID,
 }) => {
   const tokens = useDesignTokens();
+  const cardSurfaceStyle = getCardSurfaceStyle(tokens);
 
   const resolvedCurrentDose = currentDose;
   const resolvedTargetDose = targetDose;
@@ -119,11 +121,9 @@ export const DailyDoseGauge: React.FC<DailyDoseGaugeProps> = ({
       style={[
         styles.container,
         {
+          ...cardSurfaceStyle,
           padding: tokens.spacing[16],
           gap: tokens.spacing[16],
-          backgroundColor: tokens.colors.surface,
-          borderRadius: tokens.borderRadius.lg,
-          borderColor: tokens.colors.neutral[200],
         },
       ]}
     >

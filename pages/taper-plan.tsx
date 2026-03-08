@@ -14,10 +14,12 @@ import {
 import useDesignTokens from '../hooks/useDesignTokens';
 import { useRevenueCat } from '../hooks/useRevenueCat';
 import { Paywall } from '../components/Paywall';
+import ScreenTransition from '../components/ScreenTransition';
 import useTaperPlan from '../hooks/useTaperPlan';
 import { TaperStrategy } from '../hooks/useTaperPlan.helpers';
 import { useDoses } from '../hooks/useDoses';
 import { useDaily } from '../context/dailyProvider';
+import { getCardSurfaceStyle } from '../src/theme';
 
 const parseNumericInput = (value: string): number => {
   const parsed = Number(value);
@@ -67,7 +69,9 @@ const usePremiumAccess = () => {
 };
 
 export const TaperPlanPage = () => {
-  const { colors, spacing, typography, borderRadius } = useDesignTokens();
+  const tokens = useDesignTokens();
+  const { colors, spacing, typography, borderRadius } = tokens;
+  const cardSurfaceStyle = getCardSurfaceStyle(tokens);
   const premiumAccess = usePremiumAccess();
 
   const {
@@ -165,10 +169,7 @@ export const TaperPlanPage = () => {
           marginTop: spacing[4],
         },
         card: {
-          borderRadius: borderRadius.lg,
-          borderColor: colors.neutral[200],
-          borderWidth: 1,
-          backgroundColor: colors.surface,
+          ...cardSurfaceStyle,
         },
         row: {
           flexDirection: 'row',
@@ -183,7 +184,7 @@ export const TaperPlanPage = () => {
           fontWeight: typography.bodySmall.fontWeight as '400',
         },
       }),
-    [borderRadius.lg, colors, spacing, typography]
+    [cardSurfaceStyle, colors, spacing, typography]
   );
 
   const handleSavePlan = async () => {
@@ -293,13 +294,18 @@ export const TaperPlanPage = () => {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={{ flex: 1, padding: spacing[16], gap: spacing[16] }}>
-          <View>
-            <Text style={styles.pageTitle}>Smart Taper Planner</Text>
-            <Text style={styles.pageSubtitle}>
-              Premium unlock: personalized taper strategies, schedule visualization, and plan-vs-actual tracking.
-            </Text>
-          </View>
-          <Paywall />
+          <ScreenTransition delay={20}>
+            <View>
+              <Text style={styles.pageTitle}>Smart Taper Planner</Text>
+              <Text style={styles.pageSubtitle}>
+                Premium unlock: personalized taper strategies, schedule visualization, and plan-vs-actual tracking.
+              </Text>
+            </View>
+          </ScreenTransition>
+
+          <ScreenTransition delay={90}>
+            <Paywall />
+          </ScreenTransition>
         </View>
       </SafeAreaView>
     );
@@ -308,14 +314,17 @@ export const TaperPlanPage = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
-        <View>
-          <Text style={styles.pageTitle}>Smart Taper Planner</Text>
-          <Text style={styles.pageSubtitle}>
-            Build a plan with linear, stepped, or percentage-based reductions and adapt quickly if you deviate.
-          </Text>
-        </View>
+        <ScreenTransition delay={20}>
+          <View>
+            <Text style={styles.pageTitle}>Smart Taper Planner</Text>
+            <Text style={styles.pageSubtitle}>
+              Build a plan with linear, stepped, or percentage-based reductions and adapt quickly if you deviate.
+            </Text>
+          </View>
+        </ScreenTransition>
 
-        <Card style={styles.card}>
+        <ScreenTransition delay={70}>
+          <Card style={styles.card}>
           <Card.Title title="Plan wizard" subtitle="1) Dose + timeline  2) Strategy  3) Generate" />
           <Card.Content style={{ gap: spacing[12] }}>
             <View style={styles.row}>
@@ -388,12 +397,14 @@ export const TaperPlanPage = () => {
               </Button>
             </View>
           </Card.Content>
-        </Card>
+          </Card>
+        </ScreenTransition>
 
         {plan ? (
           <>
-            <Card style={styles.card}>
-              <Card.Title title="Selected day: target vs actual" subtitle={formatDateForDisplay(selectedDateISO)} />
+            <ScreenTransition delay={120}>
+              <Card style={styles.card}>
+                <Card.Title title="Selected day: target vs actual" subtitle={formatDateForDisplay(selectedDateISO)} />
               <Card.Content style={{ gap: spacing[8] }}>
                 <View style={styles.row}>
                   <Text style={styles.helperText}>Plan target</Text>
@@ -443,9 +454,11 @@ export const TaperPlanPage = () => {
                   <Text style={styles.helperText}>No plan target exists for the selected date.</Text>
                 )}
               </Card.Content>
-            </Card>
+              </Card>
+            </ScreenTransition>
 
-            <Card style={styles.card}>
+            <ScreenTransition delay={170}>
+              <Card style={styles.card}>
               <Card.Title
                 title="Schedule visualization"
                 subtitle={`Plan runs ${formatDateForDisplay(plan.startDateISO)} → ${formatDateForDisplay(
@@ -473,6 +486,7 @@ export const TaperPlanPage = () => {
                             borderWidth: 1,
                             borderColor: colors.neutral[200],
                             borderRadius: borderRadius.md,
+                            backgroundColor: colors.surfaceVariant,
                             padding: spacing[10],
                             gap: spacing[6],
                           }}
@@ -518,6 +532,7 @@ export const TaperPlanPage = () => {
                           borderWidth: 1,
                           borderColor: colors.neutral[200],
                           borderRadius: borderRadius.md,
+                          backgroundColor: colors.surfaceVariant,
                           padding: spacing[10],
                           gap: spacing[6],
                         }}
@@ -550,10 +565,12 @@ export const TaperPlanPage = () => {
                       </View>
                     ))}
               </Card.Content>
-            </Card>
+              </Card>
+            </ScreenTransition>
 
             {plan.regenerationHistory.length ? (
-              <Card style={styles.card}>
+              <ScreenTransition delay={220}>
+                <Card style={styles.card}>
                 <Card.Title title="Plan adjustments" subtitle="Regeneration history when deviations occurred" />
                 <Card.Content style={{ gap: spacing[8] }}>
                   {plan.regenerationHistory
@@ -566,6 +583,7 @@ export const TaperPlanPage = () => {
                           borderWidth: 1,
                           borderColor: colors.neutral[200],
                           borderRadius: borderRadius.md,
+                          backgroundColor: colors.surfaceVariant,
                           padding: spacing[10],
                         }}
                       >
@@ -577,7 +595,8 @@ export const TaperPlanPage = () => {
                       </View>
                     ))}
                 </Card.Content>
-              </Card>
+                </Card>
+              </ScreenTransition>
             ) : null}
           </>
         ) : null}

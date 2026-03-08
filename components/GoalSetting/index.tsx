@@ -3,6 +3,7 @@ import { Platform, StyleSheet, View } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Button, Card, Chip, List, ProgressBar, Snackbar, Text, TextInput } from 'react-native-paper';
 import useDesignTokens from '../../hooks/useDesignTokens';
+import { getCardSurfaceStyle } from '../../src/theme';
 import { Goal, SaveGoalInput } from '../../hooks/useGoals';
 import { GoalMilestoneState } from '../../hooks/useGoals.helpers';
 
@@ -36,7 +37,9 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
   onClear,
   onDismissCelebration,
 }) => {
-  const { colors, spacing, borderRadius, typography } = useDesignTokens();
+  const tokens = useDesignTokens();
+  const { colors, spacing, borderRadius, typography } = tokens;
+  const cardSurfaceStyle = getCardSurfaceStyle(tokens);
   const [targetDoseInput, setTargetDoseInput] = useState('');
   const [targetDate, setTargetDate] = useState<Date>(() => {
     const defaultDate = new Date();
@@ -68,10 +71,7 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
     () =>
       StyleSheet.create({
         card: {
-          borderRadius: borderRadius.lg,
-          borderColor: colors.neutral[200],
-          borderWidth: 1,
-          backgroundColor: colors.surface,
+          ...cardSurfaceStyle,
         },
         row: {
           flexDirection: 'row',
@@ -85,7 +85,7 @@ export const GoalSetting: React.FC<GoalSettingProps> = ({
           fontWeight: typography.bodySmall.fontWeight as '400',
         },
       }),
-    [borderRadius.lg, colors, typography]
+    [cardSurfaceStyle, colors, typography]
   );
 
   const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {

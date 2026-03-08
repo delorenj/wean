@@ -3,9 +3,11 @@ import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActivityIndicator, Card, SegmentedButtons, Text } from 'react-native-paper';
 import { Paywall } from '../components/Paywall';
+import ScreenTransition from '../components/ScreenTransition';
 import { useAppTheme } from '../context/themeProvider';
 import useDesignTokens from '../hooks/useDesignTokens';
 import useAnalytics from '../hooks/useAnalytics';
+import { getCardSurfaceStyle } from '../src/theme';
 import { AnalyticsPeriodSnapshot } from '../hooks/useAnalytics.helpers';
 
 type AnalyticsRange = 'weekly' | 'monthly';
@@ -59,20 +61,15 @@ const DoseBarChart = ({
   range: AnalyticsRange;
   unit: string;
 }) => {
-  const { colors, spacing, typography, borderRadius } = useDesignTokens();
+  const tokens = useDesignTokens();
+  const { colors, spacing, typography } = tokens;
+  const cardSurfaceStyle = getCardSurfaceStyle(tokens);
 
   const maxDose = Math.max(...period.dailyTotals.map((entry) => entry.totalDose), 1);
   const barWidth = range === 'weekly' ? 28 : 10;
 
   return (
-    <Card
-      style={{
-        borderRadius: borderRadius.lg,
-        borderWidth: 1,
-        borderColor: colors.neutral[200],
-        backgroundColor: colors.surface,
-      }}
-    >
+    <Card style={cardSurfaceStyle}>
       <Card.Title
         title={range === 'weekly' ? 'Last 7 days' : 'Last 30 days'}
         subtitle="Daily dose totals"
@@ -138,7 +135,9 @@ const DoseBarChart = ({
 };
 
 export const TrendsPage = () => {
-  const { colors, spacing, typography, borderRadius } = useDesignTokens();
+  const tokens = useDesignTokens();
+  const { colors, spacing, typography, borderRadius } = tokens;
+  const cardSurfaceStyle = getCardSurfaceStyle(tokens);
   const {
     settings: { defaultDoseUnit },
   } = useAppTheme();
@@ -183,16 +182,14 @@ export const TrendsPage = () => {
         },
         statCard: {
           flex: 1,
+          ...cardSurfaceStyle,
           borderRadius: borderRadius.md,
-          borderWidth: 1,
-          borderColor: colors.neutral[200],
-          backgroundColor: colors.surface,
           paddingVertical: spacing[10],
           paddingHorizontal: spacing[10],
           gap: spacing[4],
         },
       }),
-    [borderRadius.md, colors, spacing, typography]
+    [borderRadius.md, cardSurfaceStyle, colors, spacing, typography]
   );
 
   if (isLoading || isPremiumLoading) {
@@ -210,13 +207,18 @@ export const TrendsPage = () => {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={{ flex: 1, padding: spacing[16], gap: spacing[16] }}>
-          <View>
-            <Text style={styles.pageTitle}>Trend Analytics</Text>
-            <Text style={styles.pageSubtitle}>
-              Premium unlock: weekly/monthly trend charts, average dose stats, trend direction, and reduction streaks.
-            </Text>
-          </View>
-          <Paywall />
+          <ScreenTransition delay={30}>
+            <View>
+              <Text style={styles.pageTitle}>Trend Analytics</Text>
+              <Text style={styles.pageSubtitle}>
+                Premium unlock: weekly/monthly trend charts, average dose stats, trend direction, and reduction streaks.
+              </Text>
+            </View>
+          </ScreenTransition>
+
+          <ScreenTransition delay={90}>
+            <Paywall />
+          </ScreenTransition>
         </View>
       </SafeAreaView>
     );
@@ -225,75 +227,84 @@ export const TrendsPage = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
-        <View>
-          <Text style={styles.pageTitle}>Trend Analytics</Text>
-          <Text style={styles.pageSubtitle}>
-            Track your daily totals, average dose, and taper momentum over weekly and monthly windows.
-          </Text>
-        </View>
-
-        <SegmentedButtons
-          value={activeRange}
-          onValueChange={(value) => setActiveRange(value as AnalyticsRange)}
-          buttons={[
-            { value: 'weekly', label: 'Weekly' },
-            { value: 'monthly', label: 'Monthly' },
-          ]}
-        />
-
-        <View style={{ flexDirection: 'row', gap: spacing[8] }}>
-          <View style={styles.statCard}>
-            <Text style={{ color: colors.onSurfaceVariant, fontSize: typography.labelSmall.fontSize }}>
-              Average dose
-            </Text>
-            <Text style={{ color: colors.onSurface, fontSize: typography.titleMedium.fontSize, fontWeight: '600' }}>
-              {activePeriod.averageDailyDose.toFixed(2)} {defaultDoseUnit}
-            </Text>
-            <Text style={{ color: colors.onSurfaceVariant, fontSize: typography.bodySmall.fontSize }}>
-              Per day ({activeRange === 'weekly' ? '7d' : '30d'})
+        <ScreenTransition delay={20}>
+          <View>
+            <Text style={styles.pageTitle}>Trend Analytics</Text>
+            <Text style={styles.pageSubtitle}>
+              Track your daily totals, average dose, and taper momentum over weekly and monthly windows.
             </Text>
           </View>
+        </ScreenTransition>
 
-          <View style={styles.statCard}>
-            <Text style={{ color: colors.onSurfaceVariant, fontSize: typography.labelSmall.fontSize }}>
-              Trend
-            </Text>
-            <Text style={{ color: colors.onSurface, fontSize: typography.titleMedium.fontSize, fontWeight: '600' }}>
-              {getTrendArrow(activePeriod.trend.direction)} {Math.abs(activePeriod.trend.deltaPercent).toFixed(1)}%
-            </Text>
-            <Text style={{ color: colors.onSurfaceVariant, fontSize: typography.bodySmall.fontSize }}>
-              {getTrendLabel(activePeriod.trend.direction)}
-            </Text>
+        <ScreenTransition delay={60}>
+          <SegmentedButtons
+            value={activeRange}
+            onValueChange={(value) => setActiveRange(value as AnalyticsRange)}
+            buttons={[
+              { value: 'weekly', label: 'Weekly' },
+              { value: 'monthly', label: 'Monthly' },
+            ]}
+          />
+        </ScreenTransition>
+
+        <ScreenTransition delay={100}>
+          <View style={{ flexDirection: 'row', gap: spacing[8] }}>
+            <View style={styles.statCard}>
+              <Text style={{ color: colors.onSurfaceVariant, fontSize: typography.labelSmall.fontSize }}>
+                Average dose
+              </Text>
+              <Text style={{ color: colors.onSurface, fontSize: typography.titleMedium.fontSize, fontWeight: '600' }}>
+                {activePeriod.averageDailyDose.toFixed(2)} {defaultDoseUnit}
+              </Text>
+              <Text style={{ color: colors.onSurfaceVariant, fontSize: typography.bodySmall.fontSize }}>
+                Per day ({activeRange === 'weekly' ? '7d' : '30d'})
+              </Text>
+            </View>
+
+            <View style={styles.statCard}>
+              <Text style={{ color: colors.onSurfaceVariant, fontSize: typography.labelSmall.fontSize }}>
+                Trend
+              </Text>
+              <Text style={{ color: colors.onSurface, fontSize: typography.titleMedium.fontSize, fontWeight: '600' }}>
+                {getTrendArrow(activePeriod.trend.direction)} {Math.abs(activePeriod.trend.deltaPercent).toFixed(1)}%
+              </Text>
+              <Text style={{ color: colors.onSurfaceVariant, fontSize: typography.bodySmall.fontSize }}>
+                {getTrendLabel(activePeriod.trend.direction)}
+              </Text>
+            </View>
+
+            <View style={styles.statCard}>
+              <Text style={{ color: colors.onSurfaceVariant, fontSize: typography.labelSmall.fontSize }}>
+                Reduction streak
+              </Text>
+              <Text style={{ color: colors.onSurface, fontSize: typography.titleMedium.fontSize, fontWeight: '600' }}>
+                {activePeriod.reductionStreakDays}d
+              </Text>
+              <Text style={{ color: colors.onSurfaceVariant, fontSize: typography.bodySmall.fontSize }}>
+                Consecutive days down
+              </Text>
+            </View>
           </View>
+        </ScreenTransition>
 
-          <View style={styles.statCard}>
-            <Text style={{ color: colors.onSurfaceVariant, fontSize: typography.labelSmall.fontSize }}>
-              Reduction streak
-            </Text>
-            <Text style={{ color: colors.onSurface, fontSize: typography.titleMedium.fontSize, fontWeight: '600' }}>
-              {activePeriod.reductionStreakDays}d
-            </Text>
-            <Text style={{ color: colors.onSurfaceVariant, fontSize: typography.bodySmall.fontSize }}>
-              Consecutive days down
-            </Text>
-          </View>
-        </View>
-
-        <DoseBarChart period={activePeriod} range={activeRange} unit={defaultDoseUnit} />
+        <ScreenTransition delay={140}>
+          <DoseBarChart period={activePeriod} range={activeRange} unit={defaultDoseUnit} />
+        </ScreenTransition>
 
         {error ? (
-          <Card
-            style={{
-              borderRadius: borderRadius.md,
-              borderWidth: 1,
-              borderColor: colors.error,
-              backgroundColor: Platform.OS === 'web' ? colors.surface : colors.surfaceVariant,
-            }}
-          >
-            <Card.Content>
-              <Text style={{ color: colors.error }}>Unable to refresh analytics: {error}</Text>
-            </Card.Content>
-          </Card>
+          <ScreenTransition delay={180}>
+            <Card
+              style={{
+                ...cardSurfaceStyle,
+                borderColor: colors.error,
+                backgroundColor: Platform.OS === 'web' ? colors.surface : colors.surfaceVariant,
+              }}
+            >
+              <Card.Content>
+                <Text style={{ color: colors.error }}>Unable to refresh analytics: {error}</Text>
+              </Card.Content>
+            </Card>
+          </ScreenTransition>
         ) : null}
       </ScrollView>
     </SafeAreaView>

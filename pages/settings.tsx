@@ -3,7 +3,6 @@ import { Alert, Linking, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Button,
-  Divider,
   Dialog,
   List,
   Portal,
@@ -12,7 +11,6 @@ import {
   Switch,
   Text,
   TextInput,
-  useTheme,
 } from 'react-native-paper';
 import Constants from 'expo-constants';
 import { useAppTheme } from '../context/themeProvider';
@@ -23,6 +21,8 @@ import {
 } from '../hooks/useSettings.helpers';
 import useDesignTokens from '../hooks/useDesignTokens';
 import useSyncStatus from '../hooks/useSyncStatus';
+import ScreenTransition from '../components/ScreenTransition';
+import { getCardSurfaceStyle } from '../src/theme';
 import SyncStatusIndicator from '../components/SyncStatusIndicator';
 import {
   accountDeletionUiReducer,
@@ -37,8 +37,9 @@ const PRIVACY_POLICY_URL = 'https://wean.app/privacy';
 const TERMS_OF_SERVICE_URL = 'https://wean.app/terms';
 
 export const SettingsPage = () => {
-  const theme = useTheme();
-  const { colors, spacing, typography } = useDesignTokens();
+  const tokens = useDesignTokens();
+  const { colors, spacing, typography } = tokens;
+  const cardSurfaceStyle = getCardSurfaceStyle(tokens);
   const {
     settings,
     setThemePreference,
@@ -57,19 +58,29 @@ export const SettingsPage = () => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: theme.colors.background,
+      backgroundColor: colors.surface,
     },
     content: {
+      paddingHorizontal: spacing[16],
+      paddingTop: spacing[12],
       paddingBottom: spacing[32],
+      gap: spacing[12],
     },
     title: {
-      fontSize: typography.headlineLarge.fontSize,
-      lineHeight: typography.headlineLarge.lineHeight,
-      fontWeight: '600',
-      paddingHorizontal: spacing[20],
-      paddingTop: spacing[20],
-      paddingBottom: spacing[12],
+      fontSize: typography.headlineSmall.fontSize,
+      lineHeight: typography.headlineSmall.lineHeight,
+      fontWeight: '700',
       color: colors.onSurface,
+      marginBottom: spacing[4],
+    },
+    sectionCard: {
+      ...cardSurfaceStyle,
+      paddingHorizontal: spacing[8],
+      paddingBottom: spacing[8],
+    },
+    listSection: {
+      marginTop: spacing[8],
+      marginBottom: 0,
     },
     segmentedWrapper: {
       paddingHorizontal: spacing[16],
@@ -159,116 +170,130 @@ export const SettingsPage = () => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Settings</Text>
+        <ScreenTransition delay={20}>
+          <Text style={styles.title}>Settings</Text>
+        </ScreenTransition>
 
-        <List.Section title="Data Sync">
-          <SyncStatusIndicator status={status} lastSyncLabel={lastSyncLabel} onSyncNow={syncNow} />
-        </List.Section>
-
-        <Divider />
-
-        <List.Section title="App Preferences">
-          <View style={styles.segmentedWrapper}>
-            <Text style={styles.segmentedLabel}>Theme</Text>
-            <SegmentedButtons
-              value={settings.theme}
-              onValueChange={handleThemeChange}
-              buttons={[
-                { value: 'light', label: 'Light' },
-                { value: 'dark', label: 'Dark' },
-              ]}
-            />
+        <ScreenTransition delay={60}>
+          <View style={styles.sectionCard}>
+            <List.Section title="Data Sync" style={styles.listSection}>
+              <SyncStatusIndicator status={status} lastSyncLabel={lastSyncLabel} onSyncNow={syncNow} />
+            </List.Section>
           </View>
+        </ScreenTransition>
 
-          <View style={styles.segmentedWrapper}>
-            <Text style={styles.segmentedLabel}>Default Dose Unit</Text>
-            <SegmentedButtons
-              value={settings.defaultDoseUnit}
-              onValueChange={handleDoseUnitChange}
-              buttons={[
-                { value: 'g', label: 'g' },
-                { value: 'oz', label: 'oz' },
-              ]}
-            />
+        <ScreenTransition delay={90}>
+          <View style={styles.sectionCard}>
+            <List.Section title="App Preferences" style={styles.listSection}>
+              <View style={styles.segmentedWrapper}>
+                <Text style={styles.segmentedLabel}>Theme</Text>
+                <SegmentedButtons
+                  value={settings.theme}
+                  onValueChange={handleThemeChange}
+                  buttons={[
+                    { value: 'light', label: 'Light' },
+                    { value: 'dark', label: 'Dark' },
+                  ]}
+                />
+              </View>
+
+              <View style={styles.segmentedWrapper}>
+                <Text style={styles.segmentedLabel}>Default Dose Unit</Text>
+                <SegmentedButtons
+                  value={settings.defaultDoseUnit}
+                  onValueChange={handleDoseUnitChange}
+                  buttons={[
+                    { value: 'g', label: 'g' },
+                    { value: 'oz', label: 'oz' },
+                  ]}
+                />
+              </View>
+
+              <View style={styles.segmentedWrapper}>
+                <Text style={styles.segmentedLabel}>Dose Sort Order</Text>
+                <SegmentedButtons
+                  value={settings.sortOrder}
+                  onValueChange={handleSortOrderChange}
+                  buttons={[
+                    { value: 'newest', label: 'Newest first' },
+                    { value: 'oldest', label: 'Oldest first' },
+                  ]}
+                />
+              </View>
+            </List.Section>
           </View>
+        </ScreenTransition>
 
-          <View style={styles.segmentedWrapper}>
-            <Text style={styles.segmentedLabel}>Dose Sort Order</Text>
-            <SegmentedButtons
-              value={settings.sortOrder}
-              onValueChange={handleSortOrderChange}
-              buttons={[
-                { value: 'newest', label: 'Newest first' },
-                { value: 'oldest', label: 'Oldest first' },
-              ]}
-            />
+        <ScreenTransition delay={120}>
+          <View style={styles.sectionCard}>
+            <List.Section title="Notifications" style={styles.listSection}>
+              <List.Item
+                title="Enable Notifications"
+                description="Master toggle for reminders"
+                left={(props) => <List.Icon {...props} icon="bell-ring-outline" />}
+                right={() => (
+                  <Switch
+                    value={settings.notificationsEnabled}
+                    onValueChange={(value) => {
+                      void setNotificationsEnabled(value);
+                    }}
+                  />
+                )}
+              />
+              <List.Item
+                title="Reminder Times"
+                description="Coming soon"
+                left={(props) => <List.Icon {...props} icon="clock-outline" />}
+              />
+            </List.Section>
           </View>
-        </List.Section>
+        </ScreenTransition>
 
-        <Divider />
-
-        <List.Section title="Notifications">
-          <List.Item
-            title="Enable Notifications"
-            description="Master toggle for reminders"
-            left={(props) => <List.Icon {...props} icon="bell-ring-outline" />}
-            right={() => (
-              <Switch
-                value={settings.notificationsEnabled}
-                onValueChange={(value) => {
-                  void setNotificationsEnabled(value);
+        <ScreenTransition delay={150}>
+          <View style={styles.sectionCard}>
+            <List.Section title="Account" style={styles.listSection}>
+              <List.Item
+                title="Delete Account"
+                description="Permanently remove your account and all data"
+                titleStyle={styles.dangerText}
+                left={(props) => <List.Icon {...props} icon="delete-outline" color={colors.error} />}
+                onPress={() => {
+                  dispatchAccountDeletion({ type: 'openDialog' });
                 }}
               />
-            )}
-          />
-          <List.Item
-            title="Reminder Times"
-            description="Coming soon"
-            left={(props) => <List.Icon {...props} icon="clock-outline" />}
-          />
-        </List.Section>
+            </List.Section>
+          </View>
+        </ScreenTransition>
 
-        <Divider />
-
-        <List.Section title="Account">
-          <List.Item
-            title="Delete Account"
-            description="Permanently remove your account and all data"
-            titleStyle={styles.dangerText}
-            left={(props) => <List.Icon {...props} icon="delete-outline" color={colors.error} />}
-            onPress={() => {
-              dispatchAccountDeletion({ type: 'openDialog' });
-            }}
-          />
-        </List.Section>
-
-        <Divider />
-
-        <List.Section title="About">
-          <List.Item
-            title="App Version"
-            description={appVersion}
-            left={(props) => <List.Icon {...props} icon="information-outline" />}
-          />
-          <List.Item
-            title="Privacy Policy"
-            description={PRIVACY_POLICY_URL}
-            descriptionStyle={styles.linkText}
-            left={(props) => <List.Icon {...props} icon="shield-account-outline" />}
-            onPress={() => {
-              void openExternalLink(PRIVACY_POLICY_URL);
-            }}
-          />
-          <List.Item
-            title="Terms of Service"
-            description={TERMS_OF_SERVICE_URL}
-            descriptionStyle={styles.linkText}
-            left={(props) => <List.Icon {...props} icon="file-document-outline" />}
-            onPress={() => {
-              void openExternalLink(TERMS_OF_SERVICE_URL);
-            }}
-          />
-        </List.Section>
+        <ScreenTransition delay={180}>
+          <View style={styles.sectionCard}>
+            <List.Section title="About" style={styles.listSection}>
+              <List.Item
+                title="App Version"
+                description={appVersion}
+                left={(props) => <List.Icon {...props} icon="information-outline" />}
+              />
+              <List.Item
+                title="Privacy Policy"
+                description={PRIVACY_POLICY_URL}
+                descriptionStyle={styles.linkText}
+                left={(props) => <List.Icon {...props} icon="shield-account-outline" />}
+                onPress={() => {
+                  void openExternalLink(PRIVACY_POLICY_URL);
+                }}
+              />
+              <List.Item
+                title="Terms of Service"
+                description={TERMS_OF_SERVICE_URL}
+                descriptionStyle={styles.linkText}
+                left={(props) => <List.Icon {...props} icon="file-document-outline" />}
+                onPress={() => {
+                  void openExternalLink(TERMS_OF_SERVICE_URL);
+                }}
+              />
+            </List.Section>
+          </View>
+        </ScreenTransition>
       </ScrollView>
 
       <Portal>
