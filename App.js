@@ -4,21 +4,24 @@ import {ThemeProvider} from "./context/themeProvider";
 import {ThemedApp} from "./ThemedApp";
 import {DosesProvider} from "./context/dosesProvider";
 import {DailyProvider} from "./context/dailyProvider";
+import {RevenueCatProvider} from "./context/revenueCatProvider";
 
 
 export const App = () => {
 
     return (
         <FirebaseProvider>
-            <ThemeProvider>
-                <DailyProvider>
-                    <DosesProvider>
-                        <SafeAreaProvider>
-                            <ThemedApp/>
-                        </SafeAreaProvider>
-                    </DosesProvider>
-                </DailyProvider>
-            </ThemeProvider>
+            <RevenueCatProvider>
+                <ThemeProvider>
+                    <DailyProvider>
+                        <DosesProvider>
+                            <SafeAreaProvider>
+                                <ThemedApp/>
+                            </SafeAreaProvider>
+                        </DosesProvider>
+                    </DailyProvider>
+                </ThemeProvider>
+            </RevenueCatProvider>
         </FirebaseProvider>
     );
 }
