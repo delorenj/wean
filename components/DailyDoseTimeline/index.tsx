@@ -30,6 +30,7 @@ interface TimelineEntryItemProps {
   entry: DailyDoseTimelineEntry;
   isFirst: boolean;
   isLast: boolean;
+  onPress: () => void;
 }
 
 interface TimelineListHeaderProps {
@@ -45,7 +46,7 @@ const toTextStyle = (
   typographyStyle: (typeof import('../../src/tokens').Typography)[keyof (typeof import('../../src/tokens').Typography)]
 ): TextStyle => typographyStyle as TextStyle;
 
-const TimelineEntryItem: React.FC<TimelineEntryItemProps> = ({ entry, isFirst, isLast }) => {
+const TimelineEntryItem: React.FC<TimelineEntryItemProps> = ({ entry, isFirst, isLast, onPress }) => {
   const tokens = useDesignTokens();
 
   return (
@@ -98,7 +99,10 @@ const TimelineEntryItem: React.FC<TimelineEntryItemProps> = ({ entry, isFirst, i
         />
       </View>
 
-      <View
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Edit ${entry.substance || 'dose'} logged at ${entry.timeLabel}`}
+        onPress={onPress}
         style={[
           styles.entryCard,
           {
@@ -112,16 +116,29 @@ const TimelineEntryItem: React.FC<TimelineEntryItemProps> = ({ entry, isFirst, i
           },
         ]}
       >
-        <Text
-          style={{
-            color: tokens.colors.onSurfaceVariant,
-            ...toTextStyle(tokens.typography.labelLarge),
-          }}
-        >
-          {entry.timeLabel}
-        </Text>
+        <View style={styles.entryMetaRow}>
+          <Text
+            style={{
+              color: tokens.colors.onSurfaceVariant,
+              ...toTextStyle(tokens.typography.labelLarge),
+            }}
+          >
+            {entry.timeLabel}
+          </Text>
 
-        <View style={[styles.amountRow, { gap: tokens.spacing[6] }]}>
+          {entry.isEdited ? (
+            <Text
+              style={{
+                color: tokens.colors.primary[600],
+                ...toTextStyle(tokens.typography.labelMedium),
+              }}
+            >
+              Edited
+            </Text>
+          ) : null}
+        </View>
+
+        <View style={[styles.amountRow, { gap: tokens.spacing[6] }]}> 
           <Text
             style={{
               color: tokens.colors.onSurface,
@@ -150,7 +167,7 @@ const TimelineEntryItem: React.FC<TimelineEntryItemProps> = ({ entry, isFirst, i
             {entry.substance}
           </Text>
         ) : null}
-      </View>
+      </Pressable>
     </View>
   );
 };
@@ -325,7 +342,15 @@ const DailyDoseTimeline: React.FC<DailyDoseTimelineProps> = ({
       return;
     }
 
-    navigation.navigate('Dose');
+    navigation.navigate('Dose', { mode: 'add' });
+  };
+
+  const handleEditDosePress = (entry: DailyDoseTimelineEntry) => {
+    if (!entry.doseId) {
+      return;
+    }
+
+    navigation.navigate('Dose', { mode: 'edit', doseId: entry.doseId });
   };
 
   const renderTimelineEntry: ListRenderItem<DailyDoseTimelineEntry> = ({ item, index }) => (
@@ -333,6 +358,7 @@ const DailyDoseTimeline: React.FC<DailyDoseTimelineProps> = ({
       entry={item}
       isFirst={index === 0}
       isLast={index === timelineEntries.length - 1}
+      onPress={() => handleEditDosePress(item)}
     />
   );
 
@@ -372,6 +398,12 @@ const styles = StyleSheet.create({
   },
   entryCard: {
     flex: 1,
+  },
+  entryMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
   },
   amountRow: {
     flexDirection: 'row',

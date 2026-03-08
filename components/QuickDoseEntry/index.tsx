@@ -27,15 +27,22 @@ export interface QuickDoseEntryPayload {
   amount: number;
   unit: DoseUnit;
   timestamp: Date;
+  notes?: string;
+  method?: string;
 }
 
 export interface QuickDoseEntryProps {
   onSubmit: (payload: QuickDoseEntryPayload) => void | Promise<void>;
+  mode?: 'add' | 'edit';
   initialAmount?: number;
   initialUnit?: DoseUnit;
   initialTimestamp?: Date;
+  initialNotes?: string;
+  initialMethod?: string;
   submitLabel?: string;
+  cancelLabel?: string;
   disabled?: boolean;
+  onCancel?: () => void;
   testID?: string;
 }
 
@@ -56,11 +63,16 @@ const sanitizeInitialTimestamp = (value?: Date): Date => {
 
 export const QuickDoseEntry: React.FC<QuickDoseEntryProps> = ({
   onSubmit,
+  mode = 'add',
   initialAmount = 0,
   initialUnit = 'g',
   initialTimestamp,
-  submitLabel = 'Log Dose',
+  initialNotes = '',
+  initialMethod = '',
+  submitLabel,
+  cancelLabel = 'Cancel',
   disabled = false,
+  onCancel,
   testID,
 }) => {
   const tokens = useDesignTokens();
@@ -72,9 +84,16 @@ export const QuickDoseEntry: React.FC<QuickDoseEntryProps> = ({
   const [timestamp, setTimestamp] = useState<Date>(() =>
     sanitizeInitialTimestamp(initialTimestamp)
   );
+  const [notesInput, setNotesInput] = useState<string>(initialNotes);
+  const [methodInput, setMethodInput] = useState<string>(initialMethod);
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [didSubmit, setDidSubmit] = useState(false);
+
+  const resolvedSubmitLabel = submitLabel || (mode === 'edit' ? 'Save Changes' : 'Log Dose');
+  const resolvedSuccessLabel = mode === 'edit' ? 'Saved ✓' : 'Logged ✓';
+  const resolvedSubmittingLabel = mode === 'edit' ? 'Saving...' : 'Logging...';
+  const headingLabel = mode === 'edit' ? 'Edit Dose' : 'Quick Dose Entry';
 
   const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const submitScale = useRef(new Animated.Value(1)).current;
@@ -86,6 +105,16 @@ export const QuickDoseEntry: React.FC<QuickDoseEntryProps> = ({
       }
     };
   }, []);
+
+  useEffect(() => {
+    setUnit(initialUnit);
+    setAmountInput(formatDoseInput(clampDoseAmount(initialAmount, initialUnit), initialUnit));
+    setTimestamp(sanitizeInitialTimestamp(initialTimestamp));
+    setNotesInput(initialNotes);
+    setMethodInput(initialMethod);
+    setErrorMessage(undefined);
+    setDidSubmit(false);
+  }, [initialAmount, initialUnit, initialTimestamp, initialNotes, initialMethod]);
 
   const timestampLabel = useMemo(() => formatEntryTimestampLabel(timestamp), [timestamp]);
 
@@ -193,6 +222,8 @@ export const QuickDoseEntry: React.FC<QuickDoseEntryProps> = ({
           amount: roundToDosePrecision(numericAmount, unit),
           unit,
           timestamp: new Date(timestamp),
+          notes: notesInput.trim() || undefined,
+          method: methodInput.trim() || undefined,
         })
       );
 
@@ -234,7 +265,7 @@ export const QuickDoseEntry: React.FC<QuickDoseEntryProps> = ({
           },
         ]}
       >
-        Quick Dose Entry
+        {headingLabel}
       </Text>
 
       <View style={[styles.section, { gap: tokens.spacing[8] }]}> 
@@ -492,6 +523,83 @@ export const QuickDoseEntry: React.FC<QuickDoseEntryProps> = ({
         </View>
       </View>
 
+      <View style={[styles.section, { gap: tokens.spacing[8] }]}>
+        <Text
+          style={[
+            styles.label,
+            {
+              color: tokens.colors.onSurfaceVariant,
+              ...toTextStyle(tokens.typography.labelLarge),
+            },
+          ]}
+        >
+          Method
+        </Text>
+
+        <TextInput
+          value={methodInput}
+          onChangeText={(value) => {
+            setErrorMessage(undefined);
+            setMethodInput(value);
+          }}
+          placeholder="Capsule, tea, toss & wash…"
+          placeholderTextColor={tokens.colors.onSurfaceVariant}
+          style={[
+            styles.textInput,
+            {
+              minHeight: tokens.spacing[56],
+              borderRadius: tokens.borderRadius.md,
+              borderColor: tokens.colors.neutral[300],
+              borderWidth: tokens.spacing[2],
+              paddingHorizontal: tokens.spacing[12],
+              color: tokens.colors.onSurface,
+              backgroundColor: tokens.colors.surface,
+              ...toTextStyle(tokens.typography.bodyMedium),
+            },
+          ]}
+        />
+      </View>
+
+      <View style={[styles.section, { gap: tokens.spacing[8] }]}>
+        <Text
+          style={[
+            styles.label,
+            {
+              color: tokens.colors.onSurfaceVariant,
+              ...toTextStyle(tokens.typography.labelLarge),
+            },
+          ]}
+        >
+          Notes
+        </Text>
+
+        <TextInput
+          value={notesInput}
+          onChangeText={(value) => {
+            setErrorMessage(undefined);
+            setNotesInput(value);
+          }}
+          placeholder="Optional details"
+          placeholderTextColor={tokens.colors.onSurfaceVariant}
+          multiline
+          textAlignVertical="top"
+          style={[
+            styles.textInput,
+            {
+              minHeight: tokens.spacing[64],
+              borderRadius: tokens.borderRadius.md,
+              borderColor: tokens.colors.neutral[300],
+              borderWidth: tokens.spacing[2],
+              paddingHorizontal: tokens.spacing[12],
+              paddingVertical: tokens.spacing[12],
+              color: tokens.colors.onSurface,
+              backgroundColor: tokens.colors.surface,
+              ...toTextStyle(tokens.typography.bodyMedium),
+            },
+          ]}
+        />
+      </View>
+
       {errorMessage ? (
         <Text
           style={{
@@ -503,32 +611,62 @@ export const QuickDoseEntry: React.FC<QuickDoseEntryProps> = ({
         </Text>
       ) : null}
 
-      <Animated.View style={{ transform: [{ scale: submitScale }] }}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={submitLabel}
-          disabled={disabled || isSubmitting}
-          onPress={handleSubmit}
-          style={[
-            styles.submitButton,
-            {
-              minHeight: tokens.spacing[56],
-              borderRadius: tokens.borderRadius.lg,
-              backgroundColor: submitBackgroundColor,
-              ...tokens.shadows.z2,
-            },
-          ]}
-        >
-          <Text
-            style={{
-              color: submitTextColor,
-              ...toTextStyle(tokens.typography.titleMedium),
-            }}
+      <View style={[styles.actionsRow, { gap: tokens.spacing[8] }]}>
+        {onCancel ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={cancelLabel}
+            disabled={disabled || isSubmitting}
+            onPress={onCancel}
+            style={[
+              styles.cancelButton,
+              {
+                minHeight: tokens.spacing[56],
+                borderRadius: tokens.borderRadius.lg,
+                borderColor: tokens.colors.neutral[300],
+                borderWidth: tokens.spacing[2],
+                backgroundColor: tokens.colors.surfaceVariant,
+              },
+            ]}
           >
-            {didSubmit ? 'Logged ✓' : isSubmitting ? 'Logging...' : submitLabel}
-          </Text>
-        </Pressable>
-      </Animated.View>
+            <Text
+              style={{
+                color: tokens.colors.onSurface,
+                ...toTextStyle(tokens.typography.titleMedium),
+              }}
+            >
+              {cancelLabel}
+            </Text>
+          </Pressable>
+        ) : null}
+
+        <Animated.View style={[styles.submitWrapper, { transform: [{ scale: submitScale }] }]}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={resolvedSubmitLabel}
+            disabled={disabled || isSubmitting}
+            onPress={handleSubmit}
+            style={[
+              styles.submitButton,
+              {
+                minHeight: tokens.spacing[56],
+                borderRadius: tokens.borderRadius.lg,
+                backgroundColor: submitBackgroundColor,
+                ...tokens.shadows.z2,
+              },
+            ]}
+          >
+            <Text
+              style={{
+                color: submitTextColor,
+                ...toTextStyle(tokens.typography.titleMedium),
+              }}
+            >
+              {didSubmit ? resolvedSuccessLabel : isSubmitting ? resolvedSubmittingLabel : resolvedSubmitLabel}
+            </Text>
+          </Pressable>
+        </Animated.View>
+      </View>
     </View>
   );
 };
@@ -577,6 +715,21 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  textInput: {
+    width: '100%',
+  },
+  actionsRow: {
+    width: '100%',
+    flexDirection: 'row',
+  },
+  cancelButton: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  submitWrapper: {
+    flex: 1,
   },
   submitButton: {
     alignItems: 'center',

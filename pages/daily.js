@@ -24,7 +24,7 @@ export const DailyPage = () => {
     const handleAddDose = () => {
         // Logic to add a new dose to the timeline
         // setShowForm(true);
-        navigation.navigate('Dose');
+        navigation.navigate('Dose', { mode: 'add' });
     };
     return (
         <SafeAreaView style={styles.safeAreaView}>
