@@ -106,12 +106,12 @@ export const DailyDoseGauge: React.FC<DailyDoseGaugeProps> = ({
     gaugeCircumference - metrics.clampedProgressRatio * gaugeCircumference;
 
   const progressColor = metrics.isOverTarget
-    ? tokens.colors.warning
-    : tokens.colors.primary[400];
+    ? tokens.chart.gaugeWarning
+    : tokens.chart.gaugeProgress;
 
   const secondaryTextColor = metrics.isOverTarget
-    ? tokens.colors.warning
-    : tokens.colors.onSurfaceVariant;
+    ? tokens.chart.gaugeWarning
+    : tokens.chart.gaugeTextSecondary;
 
   return (
     <View
@@ -154,7 +154,7 @@ export const DailyDoseGauge: React.FC<DailyDoseGaugeProps> = ({
               cx={gaugeSize / 2}
               cy={gaugeSize / 2}
               r={gaugeRadius}
-              stroke={tokens.colors.neutral[200]}
+              stroke={tokens.chart.gaugeTrack}
               strokeWidth={gaugeStrokeWidth}
               fill="none"
             />
@@ -188,7 +188,7 @@ export const DailyDoseGauge: React.FC<DailyDoseGaugeProps> = ({
             style={[
               styles.percentageLabel,
               {
-                color: tokens.colors.onSurfaceVariant,
+                color: tokens.chart.gaugeTextSecondary,
                 ...toTextStyle(tokens.typography.labelMedium),
               },
             ]}

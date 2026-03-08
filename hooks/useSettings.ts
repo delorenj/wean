@@ -9,12 +9,15 @@ import {
   normalizeSettings,
   Settings,
   SortOrderPreference,
+  ThemePreference,
+  toSettingsDocument,
 } from './useSettings.helpers';
 
 export interface SettingsProviderType {
   settings: Settings;
   isLoading: boolean;
-  toggleDarkMode: () => Promise<void>;
+  setThemePreference: (theme: ThemePreference) => Promise<void>;
+  toggleThemePreference: () => Promise<void>;
   setDefaultDoseUnit: (doseUnit: DoseUnitPreference) => Promise<void>;
   setSortOrder: (sortOrder: SortOrderPreference) => Promise<void>;
   setNotificationsEnabled: (enabled: boolean) => Promise<void>;
@@ -64,7 +67,7 @@ const useSettings = (): SettingsProviderType => {
     }
 
     const settingsDocRef = doc(db, 'settings', user.uid);
-    await setDoc(settingsDocRef, nextSettings, { merge: true });
+    await setDoc(settingsDocRef, toSettingsDocument(nextSettings), { merge: true });
   }, [db, user]);
 
   const updateSettings = useCallback(async (updates: Partial<Settings>) => {
@@ -79,8 +82,14 @@ const useSettings = (): SettingsProviderType => {
     }
   }, [persistSettings]);
 
-  const toggleDarkMode = useCallback(async () => {
-    await updateSettings({ darkMode: !settingsRef.current.darkMode });
+  const setThemePreference = useCallback(async (theme: ThemePreference) => {
+    await updateSettings({ theme });
+  }, [updateSettings]);
+
+  const toggleThemePreference = useCallback(async () => {
+    await updateSettings({
+      theme: settingsRef.current.theme === 'dark' ? 'light' : 'dark',
+    });
   }, [updateSettings]);
 
   const setDefaultDoseUnit = useCallback(async (doseUnit: DoseUnitPreference) => {
@@ -98,7 +107,8 @@ const useSettings = (): SettingsProviderType => {
   return {
     settings,
     isLoading,
-    toggleDarkMode,
+    setThemePreference,
+    toggleThemePreference,
     setDefaultDoseUnit,
     setSortOrder,
     setNotificationsEnabled,

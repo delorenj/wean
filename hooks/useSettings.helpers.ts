@@ -1,20 +1,29 @@
+export type ThemePreference = 'dark' | 'light';
 export type DoseUnitPreference = 'g' | 'oz';
 export type SortOrderPreference = 'newest' | 'oldest';
 
 export interface Settings {
-  darkMode: boolean;
+  theme: ThemePreference;
   defaultDoseUnit: DoseUnitPreference;
   sortOrder: SortOrderPreference;
   notificationsEnabled: boolean;
   reminderTimes: string[];
 }
 
+export interface PersistedSettingsDocument extends Settings {
+  darkMode: boolean;
+}
+
 export const DEFAULT_SETTINGS: Settings = {
-  darkMode: true,
+  theme: 'dark',
   defaultDoseUnit: 'g',
   sortOrder: 'newest',
   notificationsEnabled: false,
   reminderTimes: [],
+};
+
+const isThemePreference = (value: unknown): value is ThemePreference => {
+  return value === 'dark' || value === 'light';
 };
 
 const isDoseUnitPreference = (value: unknown): value is DoseUnitPreference => {
@@ -36,15 +45,25 @@ const normalizeReminderTimes = (value: unknown): string[] => {
     .filter((entry) => entry.length > 0);
 };
 
+const resolveThemePreference = (theme: unknown, darkMode: unknown): ThemePreference => {
+  if (isThemePreference(theme)) {
+    return theme;
+  }
+
+  if (typeof darkMode === 'boolean') {
+    return darkMode ? 'dark' : 'light';
+  }
+
+  return DEFAULT_SETTINGS.theme;
+};
+
 export const normalizeSettings = (value: unknown): Settings => {
   const input = typeof value === 'object' && value !== null
-    ? (value as Partial<Settings>)
+    ? (value as Partial<Settings> & { darkMode?: unknown })
     : {};
 
   return {
-    darkMode: typeof input.darkMode === 'boolean'
-      ? input.darkMode
-      : DEFAULT_SETTINGS.darkMode,
+    theme: resolveThemePreference(input.theme, input.darkMode),
     defaultDoseUnit: isDoseUnitPreference(input.defaultDoseUnit)
       ? input.defaultDoseUnit
       : DEFAULT_SETTINGS.defaultDoseUnit,
@@ -66,4 +85,13 @@ export const mergeSettings = (
     ...currentSettings,
     ...updates,
   });
+};
+
+export const toSettingsDocument = (settings: Settings): PersistedSettingsDocument => {
+  const normalized = normalizeSettings(settings);
+
+  return {
+    ...normalized,
+    darkMode: normalized.theme === 'dark',
+  };
 };

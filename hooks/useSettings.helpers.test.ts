@@ -2,6 +2,7 @@ import {
   DEFAULT_SETTINGS,
   mergeSettings,
   normalizeSettings,
+  toSettingsDocument,
 } from './useSettings.helpers';
 
 describe('useSettings.helpers', () => {
@@ -13,7 +14,7 @@ describe('useSettings.helpers', () => {
 
     it('keeps valid settings values', () => {
       const normalized = normalizeSettings({
-        darkMode: false,
+        theme: 'light',
         defaultDoseUnit: 'oz',
         sortOrder: 'oldest',
         notificationsEnabled: true,
@@ -21,7 +22,7 @@ describe('useSettings.helpers', () => {
       });
 
       expect(normalized).toEqual({
-        darkMode: false,
+        theme: 'light',
         defaultDoseUnit: 'oz',
         sortOrder: 'oldest',
         notificationsEnabled: true,
@@ -29,9 +30,14 @@ describe('useSettings.helpers', () => {
       });
     });
 
+    it('maps legacy darkMode values to theme', () => {
+      expect(normalizeSettings({ darkMode: true }).theme).toBe('dark');
+      expect(normalizeSettings({ darkMode: false }).theme).toBe('light');
+    });
+
     it('falls back to defaults for invalid values', () => {
       const normalized = normalizeSettings({
-        darkMode: 'yes',
+        theme: 'amoled',
         defaultDoseUnit: 'mg',
         sortOrder: 'recent',
         notificationsEnabled: 'on',
@@ -39,7 +45,7 @@ describe('useSettings.helpers', () => {
       });
 
       expect(normalized).toEqual({
-        darkMode: DEFAULT_SETTINGS.darkMode,
+        theme: DEFAULT_SETTINGS.theme,
         defaultDoseUnit: DEFAULT_SETTINGS.defaultDoseUnit,
         sortOrder: DEFAULT_SETTINGS.sortOrder,
         notificationsEnabled: DEFAULT_SETTINGS.notificationsEnabled,
@@ -51,12 +57,14 @@ describe('useSettings.helpers', () => {
   describe('mergeSettings', () => {
     it('applies updates while preserving untouched values', () => {
       const merged = mergeSettings(DEFAULT_SETTINGS, {
+        theme: 'light',
         defaultDoseUnit: 'oz',
         notificationsEnabled: true,
       });
 
       expect(merged).toEqual({
         ...DEFAULT_SETTINGS,
+        theme: 'light',
         defaultDoseUnit: 'oz',
         notificationsEnabled: true,
       });
@@ -64,10 +72,28 @@ describe('useSettings.helpers', () => {
 
     it('sanitizes invalid updates', () => {
       const merged = mergeSettings(DEFAULT_SETTINGS, {
+        theme: 'invalid' as never,
         defaultDoseUnit: 'lb' as never,
       });
 
+      expect(merged.theme).toBe(DEFAULT_SETTINGS.theme);
       expect(merged.defaultDoseUnit).toBe(DEFAULT_SETTINGS.defaultDoseUnit);
+    });
+  });
+
+  describe('toSettingsDocument', () => {
+    it('includes derived darkMode boolean for persistence compatibility', () => {
+      expect(toSettingsDocument({ ...DEFAULT_SETTINGS, theme: 'dark' }).darkMode).toBe(true);
+      expect(toSettingsDocument({ ...DEFAULT_SETTINGS, theme: 'light' }).darkMode).toBe(false);
+    });
+
+    it('preserves theme field for Firestore settings/{uid}/theme reads', () => {
+      const document = toSettingsDocument({
+        ...DEFAULT_SETTINGS,
+        theme: 'light',
+      });
+
+      expect(document.theme).toBe('light');
     });
   });
 });

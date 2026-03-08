@@ -45,7 +45,7 @@ export const Colors = {
   // Surfaces (for containers)
   surface: '#FFFFFF',
   surfaceVariant: '#F3F3F3',
-  onSurface: '#121212',
+  onSurface: '#000000',
   onSurfaceVariant: '#666666',
 
   // Overlay (for modals, sheets)
@@ -62,11 +62,17 @@ export const DarkColors = {
   onSurfaceVariant: '#CCCCCC',
   neutral: {
     ...Colors.neutral,
-    0: '#121212',
     10: '#1A1A1A',
     50: '#222222',
     100: '#2E2E2E',
     200: '#3E3E3E',
+    300: '#4A4A4A',
+    400: '#666666',
+    500: '#8A8A8A',
+    600: '#B0B0B0',
+    700: '#D0D0D0',
+    800: '#E2E2E2',
+    900: '#FFFFFF',
   },
 };
 
@@ -229,90 +235,106 @@ export const Shadows = {
   },
 };
 
+type TokenPalette = typeof Colors;
+
 // COMPONENT STATES
-export const ComponentStates = {
+export const createComponentStates = (palette: TokenPalette) => ({
   button: {
     enabled: {
-      backgroundColor: Colors.primary[300],
-      textColor: Colors.neutral[0],
+      backgroundColor: palette.primary[300],
+      textColor: palette.neutral[0],
       ...Shadows.z2,
     },
     pressed: {
-      backgroundColor: Colors.primary[400],
-      textColor: Colors.neutral[0],
+      backgroundColor: palette.primary[400],
+      textColor: palette.neutral[0],
       scale: 0.98,
       ...Shadows.z1,
     },
     disabled: {
-      backgroundColor: Colors.neutral[200],
-      textColor: Colors.neutral[400],
+      backgroundColor: palette.neutral[200],
+      textColor: palette.onSurfaceVariant,
       ...Shadows.none,
     },
     loading: {
       opacity: 0.6,
-      backgroundColor: Colors.primary[300],
+      backgroundColor: palette.primary[300],
     },
   },
 
   input: {
     default: {
-      borderColor: Colors.neutral[300],
-      backgroundColor: Colors.neutral[50],
-      textColor: Colors.neutral[900],
+      borderColor: palette.neutral[300],
+      backgroundColor: palette.surfaceVariant,
+      textColor: palette.onSurface,
     },
     focused: {
-      borderColor: Colors.primary[300],
-      backgroundColor: Colors.neutral[0],
+      borderColor: palette.primary[300],
+      backgroundColor: palette.surface,
       borderWidth: 2,
       ...Shadows.z1,
     },
     filled: {
-      backgroundColor: Colors.primary[50],
-      borderColor: Colors.primary[200],
-      textColor: Colors.neutral[900],
+      backgroundColor: palette.primary[50],
+      borderColor: palette.primary[200],
+      textColor: palette.onSurface,
     },
     error: {
-      borderColor: Colors.error,
-      backgroundColor: Colors.error + '08', // 8% opacity
+      borderColor: palette.error,
+      backgroundColor: palette.error + '08', // 8% opacity
     },
     disabled: {
-      backgroundColor: Colors.neutral[100],
-      textColor: Colors.neutral[400],
+      backgroundColor: palette.neutral[100],
+      textColor: palette.onSurfaceVariant,
     },
   },
 
   card: {
     default: {
-      backgroundColor: Colors.surface,
-      borderColor: Colors.neutral[200],
+      backgroundColor: palette.surface,
+      borderColor: palette.neutral[200],
       borderRadius: BorderRadius.lg,
       ...Shadows.z1,
     },
     highlighted: {
-      backgroundColor: Colors.primary[50],
-      borderColor: Colors.primary[200],
+      backgroundColor: palette.primary[50],
+      borderColor: palette.primary[200],
     },
     active: {
-      backgroundColor: Colors.primary[100],
-      borderColor: Colors.primary[300],
+      backgroundColor: palette.primary[100],
+      borderColor: palette.primary[300],
       ...Shadows.z2,
     },
     error: {
-      backgroundColor: Colors.error + '08',
-      borderColor: Colors.error,
+      backgroundColor: palette.error + '08',
+      borderColor: palette.error,
     },
   },
 
   progressBar: {
     track: {
-      backgroundColor: Colors.neutral[200],
+      backgroundColor: palette.neutral[200],
       height: 4,
     },
     fill: {
-      backgroundColor: Colors.primary[400],
+      backgroundColor: palette.primary[400],
     },
   },
-};
+});
+
+export const ComponentStates = createComponentStates(Colors);
+export const DarkComponentStates = createComponentStates(DarkColors);
+
+export const createChartColors = (palette: TokenPalette) => ({
+  gaugeTrack: palette.neutral[200],
+  gaugeProgress: palette.primary[400],
+  gaugeWarning: palette.warning,
+  gaugeTextPrimary: palette.onSurface,
+  gaugeTextSecondary: palette.onSurfaceVariant,
+});
+
+export const ChartColors = createChartColors(Colors);
+export const DarkChartColors = createChartColors(DarkColors);
 
 // SAFE AREA INSETS (for notched devices)
 export const SafeAreaInsets = {
@@ -354,6 +376,9 @@ export default {
   BorderRadius,
   Shadows,
   ComponentStates,
+  DarkComponentStates,
+  ChartColors,
+  DarkChartColors,
   SafeAreaInsets,
   Animation,
   Easing,
