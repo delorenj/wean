@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {StyleSheet, FlatList, View} from 'react-native';
 import { Title, Paragraph } from 'react-native-paper';
-import {DailyDoseGauge} from "../DailyDoseGauge";
-import {Index as RollingCalendarWeek} from "../../components/RollingCalendarWeek";
+import {DailyDoseGauge} from '../DailyDoseGauge';
+import {Index as RollingCalendarWeek, RollingCalendarWeekEntry} from '../../components/RollingCalendarWeek';
 import { useDoses } from '../../hooks/useDoses';
 import { useTaperSettings } from '../../hooks/useTaperSettings';
 import useDesignTokens from '../../hooks/useDesignTokens';
@@ -28,11 +28,16 @@ interface ListHeaderProps {
   currentDose: number;
   targetDose: number;
   unit: string;
+  calendarEntries: RollingCalendarWeekEntry[];
 }
 
-const ListHeader: React.FC<ListHeaderProps> = ({ currentDose, targetDose, unit }) => (
+const ListHeader: React.FC<ListHeaderProps> = ({ currentDose, targetDose, unit, calendarEntries }) => (
   <View>
-    <RollingCalendarWeek />
+    <RollingCalendarWeek
+      entries={calendarEntries}
+      defaultTargetDose={targetDose}
+      unit={unit}
+    />
     <DailyDoseGauge currentDose={currentDose} targetDose={targetDose} unit={unit} />
   </View>
 );
@@ -43,6 +48,15 @@ const TimelineList = () => {
   const { settings } = useTaperSettings();
   // Define the data for the timeline
   const { doses, totalDoses, commonUnit } = useDoses();
+
+  const calendarEntries = useMemo<RollingCalendarWeekEntry[]>(() => {
+    return doses.map((dose) => ({
+      date: dose.date?.toDate ? dose.date.toDate() : new Date(),
+      doseTaken: dose.amount,
+      targetDose: settings.targetDose,
+      unit: dose.doseUnit || settings.unit || commonUnit,
+    }));
+  }, [doses, settings.targetDose, settings.unit, commonUnit]);
 
   return (
     // Wrap the FlatList with a ScrollView
@@ -57,6 +71,7 @@ const TimelineList = () => {
           currentDose={totalDoses}
           targetDose={settings.targetDose}
           unit={settings.unit || commonUnit}
+          calendarEntries={calendarEntries}
         />
       )}
     />
