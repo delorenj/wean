@@ -1,7 +1,7 @@
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import DailyPage from '../pages/daily';
 import DosePage from '../pages/dose';
-import AnalyticsPage from '../pages/analytics';
+import TrendsPage from '../pages/trends';
 import PlanPage from '../pages/plan';
 import GoalsPage from '../pages/goals';
 import TaperPage from '../pages/taper';
@@ -67,11 +67,11 @@ export const Tabs = ({ initialRouteName = TABS_INITIAL_ROUTES.DAILY }) => {
           <MaterialCommunityIcons name="bottle-tonic-skull" color={color} size={26} />
         ),
       }} />
-      <Tab.Screen name="Analytics" component={AnalyticsPage} options={{
-        tabBarLabel: 'Analytics',
+      <Tab.Screen name="Trends" component={TrendsPage} options={{
+        tabBarLabel: 'Trends',
         tabBarLabelStyle: { fontSize: 8 },
         tabBarIcon: ({ color }) => (
-          <MaterialCommunityIcons name="chart-line" color={color} size={26} />
+          <MaterialCommunityIcons name="chart-bar" color={color} size={26} />
         ),
       }} />
       <Tab.Screen name="Plan" component={PlanPage} options={{
