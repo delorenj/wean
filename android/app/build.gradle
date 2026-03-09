@@ -80,6 +80,12 @@ def enableProguardInReleaseBuilds = (findProperty('android.enableProguardInRelea
  */
 def jscFlavor = 'org.webkit:android-jsc:+'
 
+def releaseStoreFile = findProperty('WEAN_UPLOAD_STORE_FILE') ?: System.getenv('WEAN_UPLOAD_STORE_FILE')
+def releaseStorePassword = findProperty('WEAN_UPLOAD_STORE_PASSWORD') ?: System.getenv('WEAN_UPLOAD_STORE_PASSWORD')
+def releaseKeyAlias = findProperty('WEAN_UPLOAD_KEY_ALIAS') ?: System.getenv('WEAN_UPLOAD_KEY_ALIAS')
+def releaseKeyPassword = findProperty('WEAN_UPLOAD_KEY_PASSWORD') ?: System.getenv('WEAN_UPLOAD_KEY_PASSWORD')
+def hasReleaseSigning = releaseStoreFile && releaseStorePassword && releaseKeyAlias && releaseKeyPassword
+
 android {
     ndkVersion rootProject.ext.ndkVersion
 
@@ -101,15 +107,23 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            if (hasReleaseSigning) {
+                storeFile file(releaseStoreFile)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            // Production releases should use WEAN_UPLOAD_* signing values.
+            // If those are unavailable (local/dev), fallback to debug signing.
+            signingConfig hasReleaseSigning ? signingConfigs.release : signingConfigs.debug
             shrinkResources (findProperty('android.enableShrinkResourcesInReleaseBuilds')?.toBoolean() ?: false)
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
