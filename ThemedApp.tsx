@@ -1,42 +1,18 @@
-import {
-  NavigationContainer,
-  DefaultTheme as DefaultNavTheme,
-  DarkTheme as DarkNavTheme
-} from "@react-navigation/native";
-
-import {
-  MD3DarkTheme,
-  MD3LightTheme,
-} from 'react-native-paper';
-
-import merge from 'deepmerge';
-import useSettings from "./hooks/useSettings";
-import {OnboardingGate} from "./components/OnboardingGate";
-import {useEffect, useState} from "react";
-import {Provider as PaperProvider, adaptNavigationTheme} from 'react-native-paper';
-
-const {LightTheme, DarkTheme} = adaptNavigationTheme({
-  reactNavigationLight: DefaultNavTheme,
-  reactNavigationDark: DarkNavTheme
-});
-
-const CombinedDefaultTheme = merge(MD3LightTheme, LightTheme);
-const CombinedDarkTheme = merge(MD3DarkTheme, DarkTheme);
+import { NavigationContainer } from '@react-navigation/native';
+import { Provider as PaperProvider } from 'react-native-paper';
+import { StatusBar } from 'expo-status-bar';
+import { OnboardingGate } from './components/OnboardingGate';
+import { useAppTheme } from './context/themeProvider';
 
 export const ThemedApp = () => {
-    const { settings } = useSettings();
-    const [theme, setTheme] = useState<any>(CombinedDarkTheme);
+  const { paperTheme, statusBarStyle } = useAppTheme();
 
-    useEffect(() => {
-        setTheme(settings.darkMode ? CombinedDarkTheme : CombinedDefaultTheme)
-    }, [settings])
-
-    return (
-        <PaperProvider theme={theme}>
-            <NavigationContainer theme={theme}>
-              <OnboardingGate/>
-            </NavigationContainer>
-          </PaperProvider>
-    )
-
-}
+  return (
+    <PaperProvider theme={paperTheme}>
+      <StatusBar style={statusBarStyle} backgroundColor={paperTheme.colors.background} />
+      <NavigationContainer theme={paperTheme}>
+        <OnboardingGate />
+      </NavigationContainer>
+    </PaperProvider>
+  );
+};

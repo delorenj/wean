@@ -5,9 +5,11 @@ import {useMainStyles} from "../hooks/useMainStyles";
 import useFireauth from "../hooks/useFireauth";
 import {useDoses} from "../hooks/useDoses";
 import {resetOnboarding} from "../utils/onboardingStorage";
+import useDesignTokens from "../hooks/useDesignTokens";
 
 export const DebugPage = () => {
   const theme = useTheme();
+  const tokens = useDesignTokens();
   const styles = useMainStyles(theme);
   const {user} = useFireauth();
   const {doses} = useDoses();
@@ -27,7 +29,7 @@ export const DebugPage = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Debug</Text>
+      <Text style={[styles.text, { color: tokens.colors.onSurface }]}>Debug</Text>
 
       {/* User Details Section */}
       <Card style={styles.card}>
@@ -82,7 +84,6 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 16,
-    color: '#333',
   },
   card: {
     marginTop: 16,

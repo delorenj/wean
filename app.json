@@ -1,11 +1,13 @@
 {
   "expo": {
-    "name": "wean",
+    "name": "Wean",
     "slug": "wean",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
+    "description": "Track kratom intake, visualize progress, and taper safely with smart planning.",
+    "primaryColor": "#58BC82",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -26,7 +28,17 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "com.lasertoast.wean"
+      "package": "com.lasertoast.wean",
+      "versionCode": 1,
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED",
+        "SCHEDULE_EXACT_ALARM",
+        "USE_EXACT_ALARM"
+      ],
+      "playStoreUrl": "https://play.google.com/store/apps/details?id=com.lasertoast.wean",
+      "config": {
+        "googleMobileAdsAppId": ""
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -37,6 +49,9 @@
       "eas": {
         "projectId": "86590188-803b-4214-b15c-fca910b2cf66"
       }
-    }
+    },
+    "plugins": [
+      "@react-native-community/datetimepicker"
+    ]
   }
 }

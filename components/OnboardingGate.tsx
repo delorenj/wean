@@ -1,25 +1,23 @@
 /**
  * Onboarding Gate
- * 
+ *
  * Checks if user has completed onboarding and routes accordingly
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { Text } from 'react-native-paper';
 import { isOnboardingCompleted } from '../utils/onboardingStorage';
+import { subscribeToOnboardingReset } from '../utils/onboardingFlow';
 import OnboardingPage from '../pages/onboarding';
 import { Tabs } from './tabs';
 
 export const OnboardingGate: React.FC = () => {
   const [isChecking, setIsChecking] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [initialRouteName, setInitialRouteName] = useState<'Daily' | 'Dose'>('Daily');
 
-  useEffect(() => {
-    checkOnboardingStatus();
-  }, []);
-
-  const checkOnboardingStatus = async () => {
+  const checkOnboardingStatus = useCallback(async () => {
     try {
       const completed = await isOnboardingCompleted();
       setHasCompletedOnboarding(completed);
@@ -30,9 +28,25 @@ export const OnboardingGate: React.FC = () => {
     } finally {
       setIsChecking(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    void checkOnboardingStatus();
+  }, [checkOnboardingStatus]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToOnboardingReset(() => {
+      setInitialRouteName('Daily');
+      setHasCompletedOnboarding(false);
+      setIsChecking(false);
+      void checkOnboardingStatus();
+    });
+
+    return unsubscribe;
+  }, [checkOnboardingStatus]);
 
   const handleOnboardingComplete = () => {
+    setInitialRouteName('Dose');
     setHasCompletedOnboarding(true);
   };
 
@@ -49,5 +63,5 @@ export const OnboardingGate: React.FC = () => {
     return <OnboardingPage onComplete={handleOnboardingComplete} />;
   }
 
-  return <Tabs />;
+  return <Tabs initialRouteName={initialRouteName} />;
 };

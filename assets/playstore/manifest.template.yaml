@@ -1,0 +1,73 @@
+# WEAN-21 Play Store Asset Manifest (Template)
+# Copy to manifest.yaml and fill status/path fields.
+
+meta:
+  app_id: com.lasertoast.wean
+  package: com.lasertoast.wean
+  branch: wean-21-play-store-submission-2026-03-10
+  updated_at_et: "YYYY-MM-DD HH:MM ET"
+  owner: "<name>"
+
+assets:
+  feature_graphic:
+    required: true
+    spec: "1024x500 PNG/JPG"
+    path: "assets/playstore/feature-graphic-1024x500.png"
+    status: "MISSING" # MISSING|READY|NEEDS_REVIEW
+    notes: ""
+
+  app_icon:
+    required: true
+    spec: "512x512 PNG"
+    path: "assets/icon.png"
+    status: "NEEDS_REVIEW"
+    notes: "Current source is 1024x1024; verify Play compatibility/final export."
+
+  phone_screenshots:
+    required: true
+    spec: "2-8 images, PNG/JPG"
+    path_glob: "assets/playstore/screenshots/phone/*.png"
+    status: "MISSING"
+    minimum_count: 2
+    target_count: 5
+
+  tablet7_screenshots:
+    required: false
+    spec: "Optional recommended"
+    path_glob: "assets/playstore/screenshots/tablet7/*.png"
+    status: "MISSING"
+
+  tablet10_screenshots:
+    required: false
+    spec: "Optional recommended"
+    path_glob: "assets/playstore/screenshots/tablet10/*.png"
+    status: "MISSING"
+
+play_console:
+  app_name:
+    value: "Wean: Taper & Track"
+    source: "docs/play-store-listing.md"
+    status: "READY"
+
+  short_description:
+    value: "Track kratom intake, visualize progress, and taper safely with smart planning."
+    source: "docs/play-store-listing.md"
+    status: "READY"
+
+  full_description:
+    source: "docs/play-store-listing.md"
+    status: "READY"
+
+  privacy_policy_url:
+    value: "<PUBLIC_URL_REQUIRED>"
+    source: "docs/privacy-policy.md"
+    status: "MISSING"
+
+release:
+  track:
+    value: "<internal|closed|production>"
+    status: "MISSING"
+
+  artifact:
+    value: "<EAS_BUILD_ID_OR_AAB_PATH>"
+    status: "MISSING"
