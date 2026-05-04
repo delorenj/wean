@@ -86,3 +86,4 @@ wean-17739-firebase-adminsdk-*
 .plane.env
 .plane.json
 .gemini
+.vscode
